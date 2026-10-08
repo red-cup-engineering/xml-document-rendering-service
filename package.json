@@ -1,0 +1,54 @@
+{
+  "name": "@red-cup-engineering/xml-document-rendering-service",
+  "version": "0.1.6",
+  "files": [
+    "src"
+  ],
+  "private": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/xml/index.mjs"
+    },
+    "./svg": {
+      "import": "./src/xml/svg/index.mjs"
+    },
+    "./svg/radial": {
+      "import": "./src/xml/svg/radial/index.mjs"
+    },
+    "./core": {
+      "import": "./src/xml/core.mjs"
+    },
+    "./svg/layout": {
+      "import": "./src/xml/svg/layout.mjs"
+    },
+    "./svg/visual-valuation": {
+      "import": "./src/xml/svg/visual-valuation.mjs"
+    },
+    "./svg/tile": {
+      "import": "./src/xml/svg/tile.mjs"
+    },
+    "./svg/report-graphic": {
+      "import": "./src/xml/svg/report-graphic.mjs"
+    },
+    "./transformations": {
+      "import": "./src/xml/transformations.mjs"
+    },
+    "./document-read": {
+      "import": "./src/xml/document-read.mjs"
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@red-cup-engineering/metrologic": "workspace:*",
+    "@red-cup-engineering/computer-content-engineering-services-section": "workspace:*",
+    "@red-cup-engineering/cryptographic-data-service": "workspace:*",
+    "@red-cup-engineering/uri-services-section": "workspace:*",
+    "@red-cup-engineering/signcell": "workspace:*",
+    "@rgrove/parse-xml": "5.0.0",
+    "xml-name-validator": "5.0.0",
+    "@red-cup-engineering/computer-data-services-section": "workspace:*"
+  }
+}

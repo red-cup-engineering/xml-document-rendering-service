@@ -1,0 +1,503 @@
+{
+  "revision": "b15e011a9ada3594eef5e4531645650a94b9bc52",
+  "scope": "First32 valid and32 not-wf standalone XMLTest candidates; exclude DTD and non-UTF8 byte carriers. No full-suite claim. Namespace1.0 cases exclude DTD, non-UTF8 byte carriers and TYPE=error URI/IRI cases; invalid denotes DTD validity, not namespace well-formedness.",
+  "fixtures": [
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/001.xml",
+      "expected": false,
+      "bytes": 32,
+      "xml": "<doc>\r\n<doc\r\n?\r\n<a</a>\r\n</doc>\r\n",
+      "sha256": "91449388ec72aaf02b1a115d1f07cc560fe22e0a5e0de22dc791e77cf1a6d7ee",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/001.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/002.xml",
+      "expected": false,
+      "bytes": 32,
+      "xml": "<doc>\r\n<.doc></.doc>\r\n</doc>\r\n\r\n",
+      "sha256": "4f2607e43da9c9477811338c428f9b6fdddcdb25507f1d995384e521b41c884f",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/002.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/003.xml",
+      "expected": false,
+      "bytes": 18,
+      "xml": "<doc><? ?></doc>\r\n",
+      "sha256": "fd936ea59beeaed29e7923a576865375b52aaae589636b1508a168ac2a12d2f2",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/003.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/004.xml",
+      "expected": false,
+      "bytes": 32,
+      "xml": "<doc><?target some data></doc>\r\n",
+      "sha256": "1978ca07e38783b2605db5c1e663144fb10e4b61309d965e8cbed2f365a46787",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/004.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/005.xml",
+      "expected": false,
+      "bytes": 32,
+      "xml": "<doc><?target some data?</doc>\r\n",
+      "sha256": "ec9bef1a92d7dbe9b1f10e30325577c95842527d438aefedb0e84c1fbf8598c9",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/005.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/006.xml",
+      "expected": false,
+      "bytes": 42,
+      "xml": "<doc><!-- a comment -- another --></doc>\r\n",
+      "sha256": "4faadb9342b3a4c17b2ad203022e4508953ee7eaf7860448469dc817ebc76382",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/006.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/007.xml",
+      "expected": false,
+      "bytes": 25,
+      "xml": "<doc>&amp no refc</doc>\r\n",
+      "sha256": "2f053291c4dbd62e64ea13677df2116170bf19c248f3531e1f51f8483e3e4e64",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/007.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/008.xml",
+      "expected": false,
+      "bytes": 22,
+      "xml": "<doc>&.entity;</doc>\r\n",
+      "sha256": "a524830ed8cd602089f74510d60242669dec71872d088a79ed1e6ec09c4352f2",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/008.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/009.xml",
+      "expected": false,
+      "bytes": 18,
+      "xml": "<doc>&#RE;</doc>\r\n",
+      "sha256": "68b2748cad92109ef134c347b84c1ad91c3d8e597a6a2591ded240d305da1509",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/009.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/010.xml",
+      "expected": false,
+      "bytes": 18,
+      "xml": "<doc>A & B</doc>\r\n",
+      "sha256": "186f2857ea33d09d2e77104c4c00751b3c5c7029fcc7c1e19aaa99f5c5b8aaca",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/010.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/011.xml",
+      "expected": false,
+      "bytes": 16,
+      "xml": "<doc a1></doc>\r\n",
+      "sha256": "a88bd529322629a7bf5be13142c8a2b825625ff9553cab5041c6d212b004e107",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/011.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/012.xml",
+      "expected": false,
+      "bytes": 19,
+      "xml": "<doc a1=v1></doc>\r\n",
+      "sha256": "123439eebea52b8ff7fb39f95129ade5e36d889b88a718d20c25ddafc81a7fbe",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/012.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/013.xml",
+      "expected": false,
+      "bytes": 21,
+      "xml": "<doc a1=\"v1'></doc>\r\n",
+      "sha256": "30f4b929abf8eb0ef5e0d459f4e87cd3cce27242a62d74d7e177ae178683feb6",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/013.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/014.xml",
+      "expected": false,
+      "bytes": 24,
+      "xml": "<doc a1=\"<foo>\"></doc>\r\n",
+      "sha256": "01cdd05cd60496c4ab3975f1985bf10df9b4c596e76a8eaedca376aa585f3aa2",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/014.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/015.xml",
+      "expected": false,
+      "bytes": 17,
+      "xml": "<doc a1=></doc>\r\n",
+      "sha256": "131f99b3d018985761dadbdfa542ab877add0f4efbb49f9226b18eee6698b732",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/015.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/016.xml",
+      "expected": false,
+      "bytes": 26,
+      "xml": "<doc a1=\"v1\" \"v2\"></doc>\r\n",
+      "sha256": "be63311123e445ecfa88e981d1291717500d690b7978e1b2ce85fcb20f1c27ba",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/016.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/017.xml",
+      "expected": false,
+      "bytes": 22,
+      "xml": "<doc><![CDATA[</doc>\r\n",
+      "sha256": "a27ce6e13ead5ee353552d85d2bd2247edcfb66a252b3de74d8c89ec4fe6c3eb",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/017.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/018.xml",
+      "expected": false,
+      "bytes": 32,
+      "xml": "<doc><![CDATA [ stuff]]></doc>\r\n",
+      "sha256": "4c050212d709670e65575c8049b0284da40091bb7600ae80be990e8fd5e1d64f",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/018.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/019.xml",
+      "expected": false,
+      "bytes": 10,
+      "xml": "<doc></>\r\n",
+      "sha256": "2a38c016e93ee4ad577360cab48456a0d65628e42aca79f94f97e065be629dcc",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/019.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/020.xml",
+      "expected": false,
+      "bytes": 24,
+      "xml": "<doc a1=\"A & B\"></doc>\r\n",
+      "sha256": "f7e9792328ac1339699201dfa0bdcf5ce7e2fdfd46d7029f508faea754f0f7c0",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/020.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/021.xml",
+      "expected": false,
+      "bytes": 22,
+      "xml": "<doc a1=\"a&b\"></doc>\r\n",
+      "sha256": "f0a727a0a0df998d33650560c816660ef2135d618b85de0dca3062bff54f738b",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/021.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/022.xml",
+      "expected": false,
+      "bytes": 25,
+      "xml": "<doc a1=\"&#123:\"></doc>\r\n",
+      "sha256": "a2652935d45608256ac6f25a8f8f67e18cd82d06566d1f6ce9a4b3cb988a054d",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/022.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/023.xml",
+      "expected": false,
+      "bytes": 21,
+      "xml": "<doc 12=\"34\"></doc>\r\n",
+      "sha256": "26ba7ab33b998e87ed1411ac6045d997a66134c9120e9ca9d9080d7e83607f1f",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/023.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/024.xml",
+      "expected": false,
+      "bytes": 28,
+      "xml": "<doc>\r\n<123></123>\r\n</doc>\r\n",
+      "sha256": "6ea4b838a87b5f6f98b0a4fc9f51c61693e55b8429957438cdaa8077b666c219",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/024.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/025.xml",
+      "expected": false,
+      "bytes": 16,
+      "xml": "<doc>]]></doc>\r\n",
+      "sha256": "4be90368f0a9acfb3b102c65ba0ea99852a6ad2a0c30769b005e42a4cc2893e4",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/025.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/026.xml",
+      "expected": false,
+      "bytes": 17,
+      "xml": "<doc>]]]></doc>\r\n",
+      "sha256": "9db3402d9d62b52f23f83c5c87267fe965567471f00620901e5530210b6450b6",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/026.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/027.xml",
+      "expected": false,
+      "bytes": 25,
+      "xml": "<doc>\r\n<!-- abc\r\n</doc>\r\n",
+      "sha256": "0314eab3b0ed40b8191a1b914c0c0569876b81b8f5ffbe9255772282761831a0",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/027.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/028.xml",
+      "expected": false,
+      "bytes": 44,
+      "xml": "<doc>\r\n<?a pi that is not closed\r\n</doc>\r\n\r\n",
+      "sha256": "07293568f618e64757138992ac117690e4125757c76eee026269f6cc8317b3d4",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/028.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/029.xml",
+      "expected": false,
+      "bytes": 23,
+      "xml": "<doc>abc]]]>def</doc>\r\n",
+      "sha256": "20a1018ff90a2b9752b392bff19cf341516cee34836e7d85bc5c50bb52b3d5af",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/029.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/030.xml",
+      "expected": false,
+      "bytes": 49,
+      "xml": "<doc>A form feed (\f) is not legal in data</doc>\r\n",
+      "sha256": "63ff689d7e5d0e6b0f0afc98ff6ddccdfa8b6b477ddf99e8e223e1c20de133e3",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/030.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/031.xml",
+      "expected": false,
+      "bytes": 58,
+      "xml": "<doc><?pi a form feed (\f) is not allowed in a pi?></doc>\r\n",
+      "sha256": "9c853519244a324ea772c307711046072f548243547212fe08dbb30a193970fa",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/031.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/xmltest/not-wf/sa/032.xml",
+      "expected": false,
+      "bytes": 65,
+      "xml": "<doc><!-- a form feed (\f) is not allowed in a comment --></doc>\r\n",
+      "sha256": "dc5c16b1253363c0212f47f51a0c3da5a61f0b5938aef8fa6d23e15e3bb33048",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/xmltest/not-wf/sa/032.xml"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/013.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/013.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Bad QName syntax: multiple colons -->\n<foo>\n<bar a:b:attr=\"1\"/>\n</foo>\n",
+      "sha256": "13a6b7c98a6234a32cc662a5ed8040c2a9029cbb78bb714c121f1f3776975dda"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/014.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/014.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Bad QName syntax: colon at end -->\n<foo: />\n",
+      "sha256": "7e6fc99e94f977a932a1e4914306831cc1d47688f3a77c8dab56d7eea77b9137"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/015.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/015.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Bad QName syntax: colon at start -->\n<:foo />\n",
+      "sha256": "9b7a43c8c2e28a0c596578611d7660535b2da69c8c58a20ae11a6e6248d910ac"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/016.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/016.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Bad QName syntax: xmlns: -->\n<foo xmlns:=\"http://example.org/namespace\" />\n",
+      "sha256": "8b79faca6c5bcff48fc9b27ccbadeb79e966d9192a3f2ee5e8815f6666afe124"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/017.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/017.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Simple legal case: no namespaces -->\n<foo/>\n",
+      "sha256": "92bc5636cbf15fc1805f9af2cbcb1a5d753c8dac841f7be254dc238eaa71f52c"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/018.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/018.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Simple legal case: default namespace -->\n<foo xmlns=\"http://example.org/namespace\"/>\n",
+      "sha256": "7553ea188d8a9f48894513012f470d8ed2708330bacba84617cca20ee41e1a91"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/019.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/019.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Simple legal case: prefixed element -->\n<a:foo xmlns:a=\"http://example.org/namespace\"/>\n",
+      "sha256": "30870398793901d9f2bf29afdf1a4d201753806d87b2535d86879dc2b73ac31b"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/020.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/020.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Simple legal case: prefixed attribute -->\n<foo xmlns:a=\"http://example.org/namespace\" a:attr=\"1\"/>\n",
+      "sha256": "4e2a874b1f498459612513f9f2df2786d5cd1965b39ee255fd744e3b1558ef06"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/021.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/021.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Simple legal case: default namespace and unbinding -->\n<foo xmlns=\"http://example.org/namespace\">\n <foo xmlns=\"\"/>\n</foo>\n\n",
+      "sha256": "2640a64e246c774fbeebb4988cb73614e2585096b08c88c2687ac73ec7c1254e"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/022.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/022.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Simple legal case: default namespace and rebinding -->\n<foo xmlns=\"http://example.org/namespace\">\n <foo xmlns=\"http://example.org/other-namespace\"/>\n</foo>\n\n",
+      "sha256": "eb1608f45edbe1e891d56ef8d5ed295024003fe58da43cdb3f6c98df4e93b003"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/023.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/023.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Illegal use of 1.1-style prefix unbinding in 1.0 document -->\n<a:foo xmlns:a=\"http://example.org/namespace\">\n <a:foo xmlns:a=\"\"/>\n</a:foo>\n\n",
+      "sha256": "58e0b5ac0bfc7b30302159a3fe634365168bc43db1f9769366ec50ae393013a3"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/024.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/024.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Simple legal case: prefix rebinding -->\n<a:foo xmlns:a=\"http://example.org/namespace\">\n <a:foo xmlns:a=\"http://example.org/other-namespace\"/>\n</a:foo>\n\n",
+      "sha256": "b132e36f940d41123d5588acde29ab7c0bb4a733a0941f71b6527eec3b207cfe"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/025.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/025.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Unbound element prefix -->\n<a:foo/>\n",
+      "sha256": "9253b2b7ad5d82698fbaf3aef5f0f31510ce35cab3e596e916ba6f7b8e3d0ec9"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/026.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/026.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Unbound attribute prefix -->\n<foo a:attr=\"1\"/>\n",
+      "sha256": "d3eef8afc317f5e0d90160df2f345c006df9783263a226cfa68c8262fef8692b"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/027.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/027.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Reserved prefixes and namespaces: using the xml prefix undeclared -->\n<foo xml:lang=\"en\"/>\n",
+      "sha256": "37201b398a41bef883c8f058b924a71b0c885f8648d8f78703d97acd78d85ca4"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/028.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/028.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Reserved prefixes and namespaces: declaring the xml prefix correctly -->\n<foo xmlns:xml=\"http://www.w3.org/XML/1998/namespace\"/>\n",
+      "sha256": "7ab821f1f5505bb4b177ce3185b4eadb54255f8ca66a0bbba3869c4eaeb42814"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/029.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/029.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Reserved prefixes and namespaces: declaring the xml prefix incorrectly -->\n<foo xmlns:xml=\"http://example.org/namespace\"/>\n\n",
+      "sha256": "4290b4117adcee0ae6c0d68bd0f0d0e023a33c4146e9efade4b2de80c5b1c5c9"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/030.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/030.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Reserved prefixes and namespaces: binding another prefix\n     to the xml namespace -->\n<foo xmlns:yml=\"http://www.w3.org/XML/1998/namespace\"/>\n",
+      "sha256": "91da4d93ff82a6474d76d6fbf018241073676c76caf1d6130bef70f3ef6a4e92"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/031.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/031.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Reserved prefixes and namespaces: declaring the xmlns prefix\n     with its correct URI (illegal) -->\n<foo xmlns:xmlns=\"http://www.w3.org/2000/xmlns/\"/>\n",
+      "sha256": "61cd2e3484747174488b93231bc7ec23f083e9ea4ef02d1e64b52ca807b2bb81"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/032.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/032.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Reserved prefixes and namespaces: declaring the xmlns prefix\n     with an incorrect URI -->\n<foo xmlns:xmlns=\"http://example.org/namespace\"/>\n\n",
+      "sha256": "6512b88f9728d000d2c33daacfd25dab4a043bab4509dd2859a831366b9785ee"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/033.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/033.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Reserved prefixes and namespaces: binding another prefix\n     to the xmlns namespace -->\n<foo xmlns:ymlns=\"http://www.w3.org/2000/xmlns/\"/>\n",
+      "sha256": "c2eb1ce79f56e54d2f22bcc4d31117936190554ff3a899843bf541772713a92a"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/034.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/034.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Reserved prefixes and namespaces: binding a reserved prefix -->\n<foo xmlns:xml2=\"http://example.org/namespace\"/>\n",
+      "sha256": "f8d035695aeba297ac17252602989eb2f3756b4364ee23d5e9715abf4da80719"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/035.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/035.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Attribute uniqueness: repeated identical attribute -->\n<foo xmlns:a=\"http://example.org/~wilbur\"\n     xmlns:b=\"http://example.org/~wilbur\">\n\n<bar a:attr=\"1\" a:attr=\"2\"/>\n\n</foo>\n",
+      "sha256": "2cadfe2a5630e4ba7fe6a01ac33c1315bbabe801c79f87f81d93313f21941175"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/036.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/036.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Attribute uniqueness: repeated attribute with different prefixes -->\n<foo xmlns:a=\"http://example.org/~wilbur\"\n     xmlns:b=\"http://example.org/~wilbur\">\n\n<bar a:attr=\"1\" b:attr=\"2\"/>\n\n</foo>\n",
+      "sha256": "5709143331c580c18181173d9581976545a85fd861dbef5eeeebd23309ac2b2a"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/037.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/037.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Attribute uniqueness: different attributes with same local name -->\n<foo xmlns:a=\"http://example.org/~wilbur\"\n     xmlns:b=\"http://example.org/~kipper\">\n\n<bar a:attr=\"1\" b:attr=\"2\"/>\n\n</foo>\n",
+      "sha256": "43e727c68d00f8f7f69bb0809e5c1a4a02a1bb0dfea4c3d4b641f60fe8924c9f"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/038.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/038.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Attribute uniqueness: prefixed and unprefixed attributes with same\n     local name -->\n<foo xmlns:a=\"http://example.org/~wilbur\">\n\n<bar a:attr=\"1\" attr=\"2\"/>\n\n</foo>\n",
+      "sha256": "79977d740500941275ced9bd9be883d1c31fbc972dfc2559d6b20b0f4259474e"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/039.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/039.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Attribute uniqueness: prefixed and unprefixed attributes with same\n     local name, with default namespace -->\n<foo xmlns:a=\"http://example.org/~wilbur\"\n     xmlns:b=\"http://example.org/~kipper\"\n     xmlns=\"http://example.org/~wilbur\">\n\n<b:bar a:attr=\"1\" attr=\"2\"/>\n\n</foo>\n",
+      "sha256": "1a8cc7d5962271c8dc4197e8daca681359e47f88c334cf4fdd9308b101203899"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/040.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/040.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Attribute uniqueness: prefixed and unprefixed attributes with same\n     local name, with default namespace and element in default namespace -->\n<foo xmlns:a=\"http://example.org/~wilbur\"\n     xmlns=\"http://example.org/~wilbur\">\n\n<bar a:attr=\"1\" attr=\"2\"/>\n\n</foo>\n",
+      "sha256": "051d767fc95489601c86cb04589070859a2c55a157b88f02518597d9787a1eb5"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/041.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/041.xml",
+      "expected": true,
+      "type": "invalid",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Attribute uniqueness: prefixed and unprefixed attributes with same\n     local name, element in same namespace as prefixed attribute -->\n<foo xmlns:a=\"http://example.org/~wilbur\">\n\n<a:bar a:attr=\"1\" attr=\"2\"/>\n\n</foo>\n",
+      "sha256": "ba24c9a10d3a32279d4b1682941e7938969ce4106a7ade3f45b7d5bd70333fa5"
+    },
+    {
+      "path": "tests/fixtures/xmlconf/eduni/namespaces/1.0/042.xml",
+      "source": "https://raw.githubusercontent.com/rgrove/parse-xml/b15e011a9ada3594eef5e4531645650a94b9bc52/tests/fixtures/xmlconf/eduni/namespaces/1.0/042.xml",
+      "expected": false,
+      "type": "not-wf",
+      "xml": "<?xml version=\"1.0\"?>\n<!-- Colon in PI name -->\n<?a:b bogus?>\n<foo/>\n",
+      "sha256": "2ff7553efa457354141c5f61a7560112f22b528203ecd052d298da9eebfaa8e2"
+    }
+  ],
+  "namespaceNotice": "Copyright Richard Tobin, HCRC February 2003. May be freely redistributed provided copyright notice is retained."
+}
