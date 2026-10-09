@@ -49,6 +49,6 @@
     "@red-cup-engineering/signcell": "workspace:*",
     "@rgrove/parse-xml": "5.0.0",
     "xml-name-validator": "5.0.0",
-    "@red-cup-engineering/computer-data-services-section": "workspace:*"
+    "@red-cup-engineering/computer-data-engineering-services-section": "workspace:*"
   }
 }

@@ -2,7 +2,7 @@
  * svg/layout - geometry-agnostic placement of valuation segments, each carrying its told evidence.
  */
 import { sidesOf } from "@red-cup-engineering/signcell/cell";
-import { readingOfSides } from "@red-cup-engineering/computer-data-services-section/four";
+import { readingOfSides } from "@red-cup-engineering/computer-data-engineering-services-section/four";
 
 /** The orbit class of a segment cell: self-pair or cross-pair. */
 

@@ -12,7 +12,7 @@
 import { restrict,                } from "@red-cup-engineering/computer-content-engineering-services-section/typed-resource-classification";
 import { evidence, sidesOf } from "@red-cup-engineering/signcell/cell";
 import { document, element, serialize, xmlProjector,                               } from "@red-cup-engineering/xml-document-rendering-service";
-import { knowledgeTop, readingFamilies, readingOfSides, truthBottom, truthTop } from "@red-cup-engineering/computer-data-services-section/four";
+import { knowledgeTop, readingFamilies, readingOfSides, truthBottom, truthTop } from "@red-cup-engineering/computer-data-engineering-services-section/four";
 
 /* ── morphism ───────────────────────────────────────────────────────────── */
 

@@ -9,7 +9,7 @@
  * A point is given as evidence ({ for, against }) or as a reading's name.
  */
 import { sidesOf } from "@red-cup-engineering/signcell/cell";
-import { knowledgeHeight, readingOfSides, truthHeight } from "@red-cup-engineering/computer-data-services-section/four";
+import { knowledgeHeight, readingOfSides, truthHeight } from "@red-cup-engineering/computer-data-engineering-services-section/four";
 
 const slot = (fill, text, border, outline, decorationStyle) => Object.freeze({ fill, text, border, outline, decorationStyle });
 
