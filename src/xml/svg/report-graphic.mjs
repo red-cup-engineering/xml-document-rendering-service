@@ -5,7 +5,7 @@
  * profile, and rasterized exactly to PNG.
  */
 import { deflateSync } from "node:zlib";
-import { semanticBytes, semanticId } from "@red-cup-engineering/computer-content-engineering-services-section/semiotic-content-address";
+import { semanticBytes, semanticId } from "@red-cup-engineering/computer-content-address-engineering-services-section/semiotic-content-address";
 import { makeNiUri as rawNiUri } from "@red-cup-engineering/uri-services-section/ni-uri";
 import { four, validateFour } from "@red-cup-engineering/computer-data-engineering-services-section/four";
 import { sha256Digest, sha256Hex } from "@red-cup-engineering/cryptographic-computer-data-engineering-services-section/integrity";
