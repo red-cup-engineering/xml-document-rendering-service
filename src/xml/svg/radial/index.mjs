@@ -10,7 +10,7 @@
  * order the diagram shows, and its knowledge name otherwise.
  */
 import { restrict } from "@red-cup-engineering/computer-content-engineering-services-section/typed-resource-classification";
-import { coincides } from "@red-cup-engineering/computer-content-engineering-services-section/semiotic-content-address";
+import { coincides } from "@red-cup-engineering/computer-content-address-engineering-services-section/semiotic-content-address";
 import { document, element, serialize } from "../../index.mjs";
 import { affirmedEvidence, background, group, readingAttributes, readingOf, svgProjector, svgRoot } from "../index.mjs";
 import { layout, segmentPoint } from "../layout.mjs";
