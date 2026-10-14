@@ -10,6 +10,7 @@
  * order the diagram shows, and its knowledge name otherwise.
  */
 import { restrict } from "@red-cup-engineering/computer-content-engineering-services-section/typed-resource-classification";
+import { evidenceOf } from "@red-cup-engineering/signcell/cell";
 import { coincides } from "@red-cup-engineering/computer-content-address-engineering-services-section/semiotic-content-address";
 import { document, element, serialize } from "../../index.mjs";
 import { affirmedEvidence, background, group, readingAttributes, readingOf, svgProjector, svgRoot } from "../index.mjs";
@@ -110,7 +111,7 @@ export function segmentOfCell(at) {
   return Object.freeze({
     e: `${subject} ${predicate} ${object}`, a: predicate, v: object,
     label: orbit === "diagonal" ? `${subject} ${predicate}` : `${subject} ${predicate} ${object}`,
-    orbit, evidence: Object.freeze({ for: at.for, against: at.against }),
+    orbit, evidence: evidenceOf(at),
   });
 }
 
@@ -129,3 +130,9 @@ export function radialFromClosureStages(stages, dataform = {}) {
 }
 
 export { affirmedEvidence };
+
+/** Classify radial carriers through the native SVG and typed-resource owners. */
+export const radialProjector = restrict(svgProjector, {
+  type: "svg.radial",
+  recognize: (resource) => /data-codec="radial"/.test(resource.content),
+});
