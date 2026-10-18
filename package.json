@@ -1,6 +1,11 @@
 {
   "name": "@red-cup-engineering/xml-document-rendering-service",
   "version": "0.1.7",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/red-cup-engineering/computer-serialized-content-engineering-services-section.git",
+    "directory": "services/xml-services-section/services/xml-document-rendering-service"
+  },
   "files": [
     "src"
   ],
