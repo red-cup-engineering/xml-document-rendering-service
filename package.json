@@ -1,6 +1,6 @@
 {
   "name": "@red-cup-engineering/xml-document-rendering-service",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/red-cup-engineering/xml-document-rendering-service.git"
@@ -40,6 +40,9 @@
     },
     "./document-read": {
       "import": "./src/xml/document-read.mjs"
+    },
+    "./scxml-atomic-graph": {
+      "import": "./src/xml/scxml-atomic-graph.mjs"
     }
   },
   "scripts": {
