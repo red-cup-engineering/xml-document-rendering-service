@@ -41,6 +41,26 @@ function attributes(node, accepted) {
   return node.attributes;
 }
 
+function admitLiteralJson(value) {
+  // JSON is data here, never a script or a prototype-setting authority.
+  const stack = [value];
+  const seen = new Set();
+  while (stack.length) {
+    const item = stack.pop();
+    if (item === null || typeof item !== "object" || seen.has(item)) continue;
+    seen.add(item);
+    if (seen.size > 8192) fail("SCXML literal JSON structure is too large");
+    for (const [key, nested] of Object.entries(item)) {
+      if (key === "__proto__" || key === "constructor" || key === "prototype") {
+        fail("SCXML literal JSON may not define prototype-authority keys");
+      }
+      stack.push(nested);
+    }
+    Object.freeze(item);
+  }
+  return value;
+}
+
 function inlineJsonData(node) {
   const attr = attributes(node, ["id"]);
   if (typeof attr.id !== "string" || !SCXML_STATE.test(attr.id)) fail("data requires a lexical SCXML ID");
@@ -54,7 +74,7 @@ function inlineJsonData(node) {
   try { value = JSON.parse(text); }
   catch { fail("data " + attr.id + " must contain literal JSON, not a script"); }
   // The caller receives data as observations, not executable SCXML expressions.
-  return Object.freeze({ id: attr.id, value });
+  return Object.freeze({ id: attr.id, value: admitLiteralJson(value) });
 }
 
 function readState(node) {
