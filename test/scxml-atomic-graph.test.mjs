@@ -31,6 +31,8 @@ test("W3C SCXML namespace reader selects one typed graph and original literal da
   assert.equal(graph.states[4].final, true);
   assert.equal(graph.data.customerQuestions.decide, "Could doing nothing be better?");
   assert.deepEqual(graph.data.conditionallyPayableStages, ["buy"]);
+  assert.equal(Object.isFrozen(graph.data.customerQuestions), true);
+  assert.equal(Object.isFrozen(graph.data.conditionallyPayableStages), true);
   assert.equal(Object.isFrozen(graph.states[1].transitions), true);
   assert.equal(typeof graph.emit, "undefined", "source admission is not an event engine");
   assert.equal(typeof graph.authorizePayment, "undefined", "SCXML state identity cannot authorize payment");
@@ -62,6 +64,7 @@ test("foreign namespaces, unsupported SCXML semantics and unsafe transitions ref
   fail(source.replace('{"understand":"What does this mean?","decide":"Could doing nothing be better?"}', 'doSomethingDangerous()'));
   fail(source.replace('<data id="customerQuestions">', '<data id="customerQuestions" src="https://foreign.invalid/data">'));
   fail(source.replace('<datamodel>', '<datamodel><data id="customerQuestions">{}</data>'));
+  fail(source.replace('["buy"]', '{ "__proto__": { "paymentAuthorized": true } }'));
   fail(source.replace('<datamodel>', '<datamodel/><datamodel>'));
   fail(source.replace('datamodel="ecmascript"', 'datamodel="null"'));
   fail(source.replace('</scxml>', '<!DOCTYPE scxml SYSTEM "https://foreign.invalid/not-read.dtd"></scxml>'));
