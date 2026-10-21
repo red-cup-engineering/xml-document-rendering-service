@@ -1,5 +1,12 @@
 # XML document rendering
 
+<!-- 561-group-standards:badges:start -->
+[![Red Cup Engineering](https://img.shields.io/badge/561%20Group-Red%20Cup%20Engineering-c0392b)](https://github.com/red-cup-engineering)
+[![License: MIT](https://img.shields.io/badge/license-MIT-c0392b)](LICENSE)
+[![Indigenous data: CARE](https://img.shields.io/badge/Indigenous%20data-CARE-4b6f44)](https://github.com/red-cup-engineering/.github/blob/main/GOVERNANCE.md)
+[![Tips welcome](https://img.shields.io/badge/tips-welcome-d4a017)](https://github.com/561-group/.github/blob/main/TIPS.md)
+<!-- 561-group-standards:badges:end -->
+
 The root and `./core` exports retain the existing element/text/comment node API. XML is an ordered document carrier; mixed text and child order must survive conversion. SVG report graphics and RFCXML use this writer. HTML reuses its lexical escaping helpers while retaining its own HTML carrier behavior. The XML writer validates XML 1.0 names and characters, writes iteratively, and retains text carriage returns and attribute tab/LF/CR with character references. CDATA, comments and processing instructions cannot retain literal CR under XML normalization and refuse it; use text nodes where applicable.
 
 `./document-read` reads XML 1.0 with Namespaces 1.0 into existing `kind` nodes, preserving CDATA, comments, processing instructions, declarations, qualified names and namespace attributes. It verifies bindings, reserved prefixes and expanded attribute uniqueness without fetching or URI-normalizing namespace names. Native `@rgrove/parse-xml` 5.0.0 performs markup parsing; `xml-name-validator` 5.0.0 supplies XML name predicates. DTD processing, custom entities and XML 1.1 are excluded from these converters. The root writer's existing opaque doctype option remains distinct from DTD validation.
