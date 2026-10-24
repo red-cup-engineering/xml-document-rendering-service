@@ -8,6 +8,22 @@ import xml2js from 'xml2js';
 import {XMLParser, XMLValidator} from 'fast-xml-parser';
 const wrap=(children)=>({kind:'document',children});
 const root=(name='r',attributes={},children=[])=>({kind:'element',name,attributes,children});
+// One exact representative corpus feeds native round-trip and real third-party
+// compatibility assays; later additions cannot silently miss either gate.
+const XML_INTEROP_VALID=Object.freeze([
+  '<r/>','<r a="1"/>','<r xmlns="urn:r"/>',
+  '<r xmlns:p="urn:p"><p:x/></r>','<r><x/><x/></r>',
+  '<r>a<b/>c</r>','<r><![CDATA[a<b]]></r>','<r><!--a--></r>',
+  '<r><?pi data?></r>','<猫>😀</猫>','<r a="&#9;">&#13;</r>',
+  '<r xmlns:p="urn:p" p:x="1"/>','<r xml:lang="en"/>',
+  '<r>line'+String.fromCharCode(10)+'break</r>',
+  '<r a="&amp;"/>','<r>&#x1F600;</r>',
+  '<r><a xmlns="urn:one"/><a xmlns="urn:two"/></r>',
+  '<r xmlns:p="urn:p"><x xmlns:p="urn:q" p:n="v"/></r>',
+  '<r>hello<![CDATA[world]]></r>',
+  '<r a="one">x<item/>z<![CDATA[<y>]]></r>',
+]);
+
 test('ordered XML round trip retains mixed content, Unicode names, namespace scopes and CR/attribute whitespace',()=>{
  const document=wrap([{kind:'xmldecl',version:'1.0',encoding:'UTF-8',standalone:'yes'},root('猫',{'xmlns':'urn:root','xmlns:p':'urn:p','p:a':'a\tb\nc\rd','__proto__':'ordinary'},[{kind:'text',value:'x\ry & z'},{kind:'cdata',value:'<raw>'},{kind:'comment',value:'note'},{kind:'pi',name:'pi',value:'data'},root('p:child',{'xmlns:p':'urn:other'},[]),root('plain',{'xmlns':''},[])])]);
  // JSON parse makes prototype-looking names ordinary own data properties.
@@ -57,20 +73,8 @@ test('direct XML reader enforces bounded preparse admission, never fake parser s
 });
 
 test('the four authored XML Market operations preserve ordered semantics across 30 representative cases',()=>{
- const positive=[
-  '<r/>','<r a="1"/>','<r xmlns="urn:r"/>',
-  '<r xmlns:p="urn:p"><p:x/></r>','<r><x/><x/></r>',
-  '<r>a<b/>c</r>','<r><![CDATA[a<b]]></r>','<r><!--a--></r>',
-  '<r><?pi data?></r>','<猫>😀</猫>','<r a="&#9;">&#13;</r>',
-  '<r xmlns:p="urn:p" p:x="1"/>','<r xml:lang="en"/>',
-  '<r>line'+String.fromCharCode(10)+'break</r>',
-  '<r a="&amp;"/>','<r>&#x1F600;</r>',
-  '<r><a xmlns="urn:one"/><a xmlns="urn:two"/></r>',
-  '<r xmlns:p="urn:p"><x xmlns:p="urn:q" p:n="v"/></r>',
-  '<r>hello<![CDATA[world]]></r>',
-  '<r a="one">x<item/>z<![CDATA[<y>]]></r>',
- ];
- for(const xml of positive) {
+
+ for(const xml of XML_INTEROP_VALID) {
   const parsed=xmlToJsonTree({xml});
   assert.equal(checkXmlWellFormedness({xml}).wellFormed,true,xml);
   const fromNodes=jsonTreeToXml({document:parsed.document}).xml;
@@ -106,6 +110,24 @@ test('the four authored XML Market operations preserve ordered semantics across 
 test('real xml2js and maintained fast-xml-parser interoperability has explicit, bounded non-equivalence',async()=>{
  // These are real reference packages, not hand-authored approximations of their
  // output. No adapter may promise a drop-in xml2js object from ordered nodes.
+ // Run actual reference parse against the *same* twenty diverse native
+ // positive inputs, rather than citing old package descriptions as evidence.
+ assert.equal(XML_INTEROP_VALID.length,20);
+ const comparator=new XMLParser({
+  preserveOrder:true,ignoreAttributes:false,attributeNamePrefix:'@_',
+  removeNSPrefix:false,parseTagValue:false,parseAttributeValue:false,
+  trimValues:false,cdataPropName:'#cdata',commentPropName:'#comment',
+ });
+ for(const xml of XML_INTEROP_VALID){
+  const tree=xmlToJsonTree({xml}).document;
+  const rootNode=tree.children.find(node=>node.kind==='element');
+  const legacyParsed=await xml2js.parseStringPromise(xml,{explicitArray:true,trim:false});
+  const modernParsed=comparator.parse(xml);
+  assert.ok(Object.hasOwn(legacyParsed,rootNode.name),
+    `xml2js loses the valid root ${rootNode.name} for ${xml}`);
+  assert.ok(modernParsed.some(node=>Object.hasOwn(node,rootNode.name)),
+    `fast-xml-parser loses the valid root ${rootNode.name} for ${xml}`);
+ }
  const source='<r id="7">x<item>01</item>y<item>2</item>z</r>';
  const ours=xmlToJsonTree({xml:source}).document;
  const ownRoot=ours.children[0];
