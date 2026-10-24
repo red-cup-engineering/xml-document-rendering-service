@@ -3,9 +3,15 @@ name: XML supplier qualification and reference interoperability
 # Public original Engineering source only; no private Actions allowance,
 # merchant credentials, buyer purchase, production deployment or new runner.
 on:
+  # One PR qualification, not a redundant push+PR pair for every author commit.
+  # After reviewed integration, still qualify original main as a distinct build.
   push:
-    branches:
-      - fix/xml-parse-admission-market-contract-20261024
+    branches: [main]
+    paths:
+      - "src/xml/**"
+      - "test/**"
+      - "package.json"
+      - ".github/workflows/xml-supplier-qualification.yml"
   pull_request:
     paths:
       - "src/xml/**"
