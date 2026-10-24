@@ -41,7 +41,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/qualified" "$RUNNER_TEMP/consumer"
           npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP/qualified" --silent
-          npm install --ignore-scripts --no-audit --no-fund --prefix "$RUNNER_TEMP/consumer" "$RUNNER_TEMP"/qualified/*.tgz
+          npm install --ignore-scripts --no-audit --no-fund --registry=https://registry.561.group/ --prefix "$RUNNER_TEMP/consumer" "$RUNNER_TEMP"/qualified/*.tgz
           (
             cd "$RUNNER_TEMP/consumer"
             node --input-type=module <<'NODE'
