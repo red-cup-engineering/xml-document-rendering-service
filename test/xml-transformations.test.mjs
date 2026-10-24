@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {xmlToJsonTree,jsonTreeToXml,normalizeXml,checkXmlWellFormedness} from '../src/xml/transformations.mjs';
 import {readXmlDocument} from '../src/xml/document-read.mjs';
+import xml2js from 'xml2js';
+import {XMLParser, XMLValidator} from 'fast-xml-parser';
 const wrap=(children)=>({kind:'document',children});
 const root=(name='r',attributes={},children=[])=>({kind:'element',name,attributes,children});
 test('ordered XML round trip retains mixed content, Unicode names, namespace scopes and CR/attribute whitespace',()=>{
@@ -99,4 +101,61 @@ test('the four authored XML Market operations preserve ordered semantics across 
  }
  assert.throws(()=>xmlToJsonTree({xml:'<r>'.repeat(65)+'</r>'.repeat(65)}),RangeError);
  assert.throws(()=>xmlToJsonTree({xml:'<r>'+('a'.repeat(65531))+'</r>'}),RangeError);
+});
+
+test('real xml2js and maintained fast-xml-parser interoperability has explicit, bounded non-equivalence',async()=>{
+ // These are real reference packages, not hand-authored approximations of their
+ // output. No adapter may promise a drop-in xml2js object from ordered nodes.
+ const source='<r id="7">x<item>01</item>y<item>2</item>z</r>';
+ const ours=xmlToJsonTree({xml:source}).document;
+ const ownRoot=ours.children[0];
+ const legacy=await xml2js.parseStringPromise(source,{explicitArray:true,trim:false});
+ const maintained=new XMLParser({
+  preserveOrder:true,ignoreAttributes:false,attributeNamePrefix:'@_',
+  parseTagValue:false,parseAttributeValue:false,trimValues:false,
+  cdataPropName:'#cdata',commentPropName:'#comment',
+ }).parse(source);
+ assert.deepEqual(legacy.r.item,['01','2']);
+ assert.equal(legacy.r.$.id,'7');
+ assert.deepEqual(ownRoot.children.map(node=>node.kind),['text','element','text','element','text']);
+ assert.deepEqual(ownRoot.children.map(node=>node.value??node.name),['x','item','y','item','z']);
+ assert.equal(ownRoot.attributes.id,'7');
+ const maintainedRoot=maintained.find(node=>Object.hasOwn(node,'r'));
+ assert.ok(maintainedRoot,'maintained reference must recognize the same root');
+ assert.equal(maintainedRoot[':@']['@_id'],'7');
+ assert.deepEqual(maintainedRoot.r.map(node=>Object.keys(node).find(key=>key!==':@')),
+  ['#text','item','#text','item','#text']);
+ assert.notDeepEqual(ours,legacy,'xml2js default schema is not the ordered carrier');
+ assert.notDeepEqual(ours,maintained,'fast-xml-parser ordered schema also differs');
+
+ // Neither competitor's default object carrier substitutes for the source
+ // author's CDATA/comment/processing-instruction node identity.
+ const decorated='<r>A<!--note--><![CDATA[<raw>]]><?pi data?>B</r>';
+ const decoratedOwn=xmlToJsonTree({xml:decorated}).document.children[0];
+ assert.deepEqual(decoratedOwn.children.map(node=>node.kind),
+  ['text','comment','cdata','pi','text']);
+ const decoratedLegacy=await xml2js.parseStringPromise(decorated);
+ assert.equal(JSON.stringify(decoratedLegacy).includes('note'),false,
+  'default xml2js omits comment identity');
+ assert.equal(JSON.stringify(decoratedLegacy).includes('pi data'),false,
+  'default xml2js omits processing-instruction identity');
+
+ // A genuine maintained alternative preserves lexical prefixes when asked,
+ // but its representation and parser policy are not ours.
+ const namespaced='<r xmlns:p="urn:p"><p:item a="v"/></r>';
+ const ownNs=xmlToJsonTree({xml:namespaced}).document.children[0];
+ const parsedNs=new XMLParser({preserveOrder:true,ignoreAttributes:false,
+  removeNSPrefix:false}).parse(namespaced);
+ assert.equal(ownNs.children[0].name,'p:item');
+ assert.ok(parsedNs[0].r.some(node=>Object.hasOwn(node,'p:item')));
+ assert.equal(XMLValidator.validate(namespaced),true);
+
+ // Safety is an independently stated contract, not inferred from a reference
+ // package accepting markup or recovering from it. No external entity is read.
+ for(const hostile of [
+  '<!DOCTYPE r [<!ENTITY e SYSTEM "file:///etc/passwd">]><r>&e;</r>',
+  '<!DOCTYPE r [<!ENTITY e "abc">]><r>&e;</r>',
+  '<r><x></r>', '<p:r/>','<r>&missing;</r>',
+ ])assert.throws(()=>xmlToJsonTree({xml:hostile}),TypeError);
+ assert.throws(()=>xmlToJsonTree({xml:'<r>'+('x'.repeat(65536))+'</r>'}),RangeError);
 });
