@@ -53,7 +53,7 @@
     "@red-cup-engineering/computer-data-engineering-services-section": "0.2.0",
     "@red-cup-engineering/cryptographic-computer-data-engineering-services-section": "0.3.1",
     "@red-cup-engineering/signcell": "0.1.0",
-    "@red-cup-engineering/uri-engineering-services-section": "0.1.1"
+    "@red-cup-engineering/uri-services-section": "0.1.1"
   },
   "license": "MIT",
   "funding": {
