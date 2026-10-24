@@ -16,7 +16,28 @@ function expanded(name, scope, attribute) {
   if (prefix && !uri) namespaceFail(`undeclared namespace prefix ${prefix}`);
   return [uri ?? "", local];
 }
-export function readXmlDocument(xml, { maximumNodes = 8192, maximumDepth = 64, maximumAttributes = 8192 } = {}) {
+// Admit byte budgets before the full-tree parser allocates. Existing Market
+// conversions have their stricter independent 65536-byte admission.
+const DIRECT_READER_MAX_BYTES = 1048576;
+function admitBudget(value, label, minimum, maximum) {
+  if (!Number.isSafeInteger(value) || value < minimum || value > maximum) {
+    throw new RangeError(`XML ${label} budget must be a bounded safe integer`);
+  }
+}
+export function readXmlDocument(xml, {
+  maximumNodes = 8192, maximumDepth = 64, maximumAttributes = 8192,
+  maximumInputBytes = DIRECT_READER_MAX_BYTES,
+} = {}) {
+  if (typeof xml !== "string" || !xml.isWellFormed()) {
+    throw new TypeError("XML input requires well-formed Unicode text");
+  }
+  admitBudget(maximumNodes, "node", 1, 65536);
+  admitBudget(maximumDepth, "depth", 0, 1024);
+  admitBudget(maximumAttributes, "attribute", 0, 65536);
+  admitBudget(maximumInputBytes, "input byte", 1, DIRECT_READER_MAX_BYTES);
+  if (Buffer.byteLength(xml, "utf8") > maximumInputBytes) {
+    throw new RangeError("XML input exceeds maximumInputBytes before parsing");
+  }
   let unresolved = false;
   // The probe can identify DTD input before an unresolved DTD entity is
   // mislabeled a markup error. No probe with unresolved entities is returned.
@@ -28,11 +49,11 @@ export function readXmlDocument(xml, { maximumNodes = 8192, maximumDepth = 64, m
   const stack = [{ source, result, scope: initial, depth: 0 }]; let nodes = 0, attributeCount = 0;
   while (stack.length) {
     const frame = stack.pop();
-    if (++nodes > maximumNodes || frame.depth > maximumDepth) throw new RangeError("XML exceeds 8192 nodes or depth 64");
+    if (++nodes > maximumNodes || frame.depth > maximumDepth) throw new RangeError(`XML exceeds ${maximumNodes} nodes or depth ${maximumDepth}`);
     if (frame.source.type === "element") {
       const attrs = Object.entries(frame.source.attributes), scope = new Map(frame.scope);
       attributeCount += attrs.length;
-      if (attributeCount > maximumAttributes) throw new RangeError("XML exceeds 8192 attributes");
+      if (attributeCount > maximumAttributes) throw new RangeError(`XML exceeds ${maximumAttributes} attributes`);
       for (const [name, value] of attrs) {
         if (name !== "xmlns" && !name.startsWith("xmlns:")) continue;
         if (!qname(name)) namespaceFail(`invalid namespace declaration name ${name}`);
