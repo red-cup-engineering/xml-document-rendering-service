@@ -24,6 +24,65 @@ function admitBudget(value, label, minimum, maximum) {
     throw new RangeError(`XML ${label} budget must be a bounded safe integer`);
   }
 }
+// A conservative lexical *lower bound*, not a second XML parser. Refuse
+// definitely excessive structural allocation before the full-tree parser runs.
+// Malformed/unrecognised syntax is left to the native parser for diagnostics.
+function admitLexicalStructure(xml, maximumNodes, maximumDepth, maximumAttributes) {
+  let nodes = 1, depth = 0, attributes = 0;
+  const node = () => {
+    if (++nodes > maximumNodes)
+      throw new RangeError(`XML exceeds ${maximumNodes} nodes before parsing`);
+  };
+  for (let offset = 0; offset < xml.length;) {
+    const open = xml.indexOf("<", offset);
+    if (open < 0) return;
+    if (xml.startsWith("<!--", open) ||
+        xml.startsWith("<![CDATA[", open) ||
+        xml.startsWith("<?", open)) {
+      const comment = xml.startsWith("<!--", open);
+      const cdata = !comment && xml.startsWith("<![CDATA[", open);
+      const terminator = comment ? "-->" : cdata ? "]]>" : "?>";
+      const end = xml.indexOf(terminator, open + (comment ? 4 : cdata ? 9 : 2));
+      if (end < 0) return; // Native markup error, not budget evidence.
+      node();
+      offset = end + terminator.length;
+      continue;
+    }
+    if (xml.startsWith("<!DOCTYPE", open))
+      throw new UnsupportedXmlFeatureError("DTD processing is outside this XML conversion profile");
+    if (xml.startsWith("<!", open)) return; // Native parser decides malformed markup.
+    const closing = xml[open + 1] === "/";
+    let quote = null, end = -1, equals = 0, lastNonSpace = "";
+    for (let at = open + 1; at < xml.length; at++) {
+      const character = xml[at];
+      if (quote) {
+        if (character === quote) quote = null;
+      } else if (character === '"' || character === "'") {
+        quote = character;
+      } else if (character === ">") {
+        end = at;
+        break;
+      } else {
+        if (character === "=" && !closing) equals++;
+        if (!/\s/u.test(character)) lastNonSpace = character;
+      }
+    }
+    if (end < 0) return; // Native parser diagnoses incomplete tags.
+    if (closing) {
+      depth = Math.max(0, depth - 1);
+    } else {
+      node();
+      attributes += equals;
+      if (attributes > maximumAttributes)
+        throw new RangeError(`XML exceeds ${maximumAttributes} attributes before parsing`);
+      depth++;
+      if (depth > maximumDepth)
+        throw new RangeError(`XML exceeds depth ${maximumDepth} before parsing`);
+      if (lastNonSpace === "/") depth--;
+    }
+    offset = end + 1;
+  }
+}
 export function readXmlDocument(xml, {
   maximumNodes = 8192, maximumDepth = 64, maximumAttributes = 8192,
   maximumInputBytes = DIRECT_READER_MAX_BYTES,
@@ -38,6 +97,7 @@ export function readXmlDocument(xml, {
   if (Buffer.byteLength(xml, "utf8") > maximumInputBytes) {
     throw new RangeError("XML input exceeds maximumInputBytes before parsing");
   }
+  admitLexicalStructure(xml, maximumNodes, maximumDepth, maximumAttributes);
   let unresolved = false;
   // The probe can identify DTD input before an unresolved DTD entity is
   // mislabeled a markup error. No probe with unresolved entities is returned.

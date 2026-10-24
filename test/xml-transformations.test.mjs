@@ -72,6 +72,30 @@ test('direct XML reader enforces bounded preparse admission, never fake parser s
  assert.throws(()=>readXmlDocument('<r a="1"/>',{maximumAttributes:0}), /exceeds 0 attributes/);
 });
 
+test('direct reader rejects dense XML allocations before parse without mistaking literal markup for nodes',()=>{
+ const excessive=[
+   '<r>'+'<x/>'.repeat(10000)+'</r>',
+   '<r>'+'<!---->'.repeat(10000)+'</r>',
+   '<r>'+'<![CDATA[]]>'.repeat(10000)+'</r>',
+   '<r>'+'<?p x?>'.repeat(10000)+'</r>',
+   '<r>'.repeat(65)+'</r>'.repeat(65),
+   '<r '+Array.from({length:8200},(_,i)=>'a'+i+'="v"').join(' ')+'/>',
+ ];
+ for(const xml of excessive) assert.throws(()=>readXmlDocument(xml),/before parsing/,
+   'dense native tree must be refused before allocation');
+ const pretend='<x/>'.repeat(10000);
+ const mixed='<r><!--'+pretend+'--><![CDATA['+pretend+']]><?pi data?></r>';
+ assert.deepEqual(readXmlDocument(mixed).children[0].children.map(x=>x.kind),
+   ['comment','cdata','pi']);
+ const entity='<!DOCTYPE r [<!ENTITY x SYSTEM "file:///etc/passwd">]>';
+ assert.doesNotThrow(()=>readXmlDocument('<r><!--'+entity+'--><![CDATA['+entity+']]></r>'),
+   'literal DTD spellings do not make a document a DTD');
+ assert.throws(()=>readXmlDocument(entity+'<r>&x;</r>'),/DTD processing/,
+   'real declarations must refuse before full-tree parsing');
+ assert.equal(checkXmlWellFormedness({xml:'<r><x></r>'}).wellFormed,false,
+   'ordinary native malformed-markup diagnostics survive preflight');
+});
+
 test('the four authored XML Market operations preserve ordered semantics across 30 representative cases',()=>{
 
  for(const xml of XML_INTEROP_VALID) {
