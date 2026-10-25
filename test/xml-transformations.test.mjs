@@ -3,7 +3,7 @@ import test from 'node:test';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {xmlToJsonTree,jsonTreeToXml,normalizeXml,checkXmlWellFormedness} from '../src/xml/transformations.mjs';
-import {readXmlDocument} from '../src/xml/document-read.mjs';
+import {readXmlDocument, XmlError, UnsupportedXmlFeatureError} from '../src/xml/document-read.mjs';
 import xml2js from 'xml2js';
 import {XMLParser, XMLValidator} from 'fast-xml-parser';
 const wrap=(children)=>({kind:'document',children});
@@ -224,4 +224,25 @@ test('real xml2js and maintained fast-xml-parser interoperability has explicit, 
   '<r><x></r>', '<p:r/>','<r>&missing;</r>',
  ])assert.throws(()=>xmlToJsonTree({xml:hostile}),TypeError);
  assert.throws(()=>xmlToJsonTree({xml:'<r>'+('x'.repeat(65536))+'</r>'}),RangeError);
+});
+
+test('DOCTYPE recognition requires XML whitespace, preserving malformed checker results',()=>{
+ const malformed=['<!DOCTYPEfoo>','<!DOCTYPEfoo><r/>','<!DOCTYPE><r/>','<!DOCTYPE',
+  '<!DOCTYPE\u00a0r><r/>','<!DOCTYPE\vr><r/>','<!DOCTYPE\fr><r/>'];
+ for(const xml of malformed) {
+  assert.throws(()=>readXmlDocument(xml),XmlError,xml);
+  assert.equal(checkXmlWellFormedness({xml}).wellFormed,false,xml);
+  for(const convert of [xmlToJsonTree,normalizeXml]) {
+   assert.throws(()=>convert({xml}),error=>
+    error instanceof TypeError && error.cause instanceof XmlError,xml);
+  }
+ }
+ for(const space of [' ','\t','\r','\n']) {
+  const xml='<!DOCTYPE'+space+'r [<!ENTITY e "x">]><r>&e;</r>';
+  assert.throws(()=>readXmlDocument(xml),UnsupportedXmlFeatureError,xml);
+  for(const operation of [xmlToJsonTree,normalizeXml,checkXmlWellFormedness])
+   assert.throws(()=>operation({xml}),UnsupportedXmlFeatureError,xml);
+ }
+ const literal='<r><!--<!DOCTYPEfoo>--><![CDATA[<!DOCTYPE r>]]><?p <!DOCTYPEfoo>?></r>';
+ assert.equal(checkXmlWellFormedness({xml:literal}).wellFormed,true);
 });

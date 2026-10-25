@@ -48,7 +48,9 @@ function admitLexicalStructure(xml, maximumNodes, maximumDepth, maximumAttribute
       offset = end + terminator.length;
       continue;
     }
-    if (xml.startsWith("<!DOCTYPE", open))
+    // XML 1.0 requires S after the DOCTYPE keyword (space, tab, CR or LF).
+    // A keyword prefix alone is malformed markup, not an excluded DTD.
+    if (xml.startsWith("<!DOCTYPE", open) && /[ \t\r\n]/u.test(xml[open + 9] ?? ""))
       throw new UnsupportedXmlFeatureError("DTD processing is outside this XML conversion profile");
     if (xml.startsWith("<!", open)) return; // Native parser decides malformed markup.
     const closing = xml[open + 1] === "/";

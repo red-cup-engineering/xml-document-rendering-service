@@ -17,6 +17,24 @@ Limits are 65536 XML UTF-8 bytes, 1048576 JSON node bytes, 8192 nodes/attributes
 
 The fixture corpus retains primary W3C XMLTest and Edinburgh namespace cases from a pinned supplier revision, source URLs, hashes, expectations and redistribution notice. Its 62 selected cases exclude unsupported DTD and physical byte encodings; passing this subset does not establish complete W3C conformance.
 
+## Direct-reader admission and migration
+
+The direct `readXmlDocument(xml, options)` API now admits at most 1048576
+UTF-8 input bytes before parsing. `maximumInputBytes` may tighten but not raise
+that ceiling. All budgets must be safe integers: nodes 1..65536 (default
+8192), depth 0..1024 (default 64), and attributes 0..65536 (default 8192).
+Callers previously relying on larger input or unbounded/custom out-of-range
+budgets must bound their documents before migrating; the four transformation
+APIs retain their existing stricter limits. This is a breaking direct-reader
+admission change, not merely a patch-compatible correction.
+
+Preflight recognizes a DTD keyword only when `<!DOCTYPE` is followed by XML
+whitespace (space, tab, CR or LF), and refuses it before native parsing.
+Prefixes such as `<!DOCTYPEfoo>` and non-XML whitespace are left to the
+native parser: the checker returns `wellFormed: false`, while conversions
+refuse malformed markup. Literal spellings in comments, CDATA and processing
+instructions remain data. This guard does not validate a DTD grammar.
+
 ## Reference-parser interoperability and sellable-operation boundary
 
 The original 561 Group Market's four XML operations are **bounded, ordered

@@ -63,6 +63,8 @@ jobs:
           if (!checkXmlWellFormedness({xml}).wellFormed) throw new Error("valid XML falsely refused");
           if (checkXmlWellFormedness({xml:"<r><x></r>"}).wellFormed)
             throw new Error("invalid XML falsely admitted");
+          if (checkXmlWellFormedness({xml:"<!DOCTYPEfoo>"}).wellFormed)
+            throw new Error("malformed DOCTYPE prefix falsely admitted");
           console.log("packed XML four-operation consumer verified");
           NODE
           )
