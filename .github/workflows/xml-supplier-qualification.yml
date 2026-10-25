@@ -1,0 +1,81 @@
+name: XML supplier qualification and reference interoperability
+
+# Public original Engineering source only; no private Actions allowance,
+# merchant credentials, buyer purchase, production deployment or new runner.
+on:
+  # One PR qualification, not a redundant push+PR pair for every author commit.
+  # After reviewed integration, still qualify original main as a distinct build.
+  push:
+    branches: [main]
+    paths:
+      - "src/xml/**"
+      - "test/**"
+      - "package.json"
+      - ".github/workflows/xml-supplier-qualification.yml"
+  pull_request:
+    paths:
+      - "src/xml/**"
+      - "test/**"
+      - "package.json"
+      - ".github/workflows/xml-supplier-qualification.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xml-supplier-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qualify-source-and-consumer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install exact declared package and comparator dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Native parser, adversarial, W3C and real competitor comparisons
+        run: |
+          node --check src/xml/document-read.mjs
+          node --check src/xml/transformations.mjs
+          npm test
+      - name: Exercise exact packed public API from an independent consumer
+        run: |
+          mkdir -p "$RUNNER_TEMP/qualified" "$RUNNER_TEMP/consumer"
+          npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP/qualified" --silent
+          npm install --ignore-scripts --no-audit --no-fund --registry=https://registry.561.group/ --prefix "$RUNNER_TEMP/consumer" "$RUNNER_TEMP"/qualified/*.tgz
+          (
+            cd "$RUNNER_TEMP/consumer"
+            node --input-type=module <<'NODE'
+          import {xmlToJsonTree, jsonTreeToXml, normalizeXml, checkXmlWellFormedness}
+            from "@red-cup-engineering/xml-document-rendering-service/transformations";
+          const xml = '<r a="1">x<b/>y</r>';
+          const report = xmlToJsonTree({xml});
+          if (report.document.children[0].children.map(n=>n.kind).join(",") !== "text,element,text")
+            throw new Error("packed consumer lost the ordered mixed-content contract");
+          if (jsonTreeToXml({document:report.document}).xml !== xml)
+            throw new Error("packed consumer round trip is not source-equivalent");
+          if (normalizeXml({xml}).changed) throw new Error("packed normalizer did not stabilize");
+          if (!checkXmlWellFormedness({xml}).wellFormed) throw new Error("valid XML falsely refused");
+          if (checkXmlWellFormedness({xml:"<r><x></r>"}).wellFormed)
+            throw new Error("invalid XML falsely admitted");
+          if (checkXmlWellFormedness({xml:"<!DOCTYPEfoo>"}).wellFormed)
+            throw new Error("malformed DOCTYPE prefix falsely admitted");
+          console.log("packed XML four-operation consumer verified");
+          NODE
+          )
+          (cd "$RUNNER_TEMP/qualified" && sha256sum *.tgz) | tee qualified-package.sha256
+      - name: Preserve tested dependency selection and actual package
+        uses: actions/upload-artifact@v4
+        with:
+          name: xml-supplier-qualified-${{ github.sha }}
+          retention-days: 7
+          path: |
+            package-lock.json
+            qualified-package.sha256
+            ${{ runner.temp }}/qualified/*.tgz
+          if-no-files-found: error
