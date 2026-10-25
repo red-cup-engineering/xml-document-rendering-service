@@ -79,3 +79,239 @@ jobs:
             qualified-package.sha256
             ${{ runner.temp }}/qualified/*.tgz
           if-no-files-found: error
+
+      # Receive one historical published artifact using ONLY this job's already
+      # installed dependency closure. This is not a dependency-policy exception.
+      - name: Prepare published receiving and verify bundled package handler
+        id: receiving_prepare
+        shell: bash
+        env:
+          RECEIPT_DIR: ${{ runner.temp }}/xml-published-receiving
+        run: |
+          set -euo pipefail
+          mkdir -p "$RECEIPT_DIR/home" "$RECEIPT_DIR/cache"
+          echo "RECEIPT_DIR=$RECEIPT_DIR" >> "$GITHUB_ENV"
+          echo "SOURCE_COMMIT=aa8eeaaf1870b7cb9e52b9d90c404e1799414d13" >> "$GITHUB_ENV"
+          echo "SOURCE_TREE=0273700a78792431a93a0797af9e3d9d0201b5e3" >> "$GITHUB_ENV"
+          echo "PUBLISHED_VERSION=0.1.8-dev.326" >> "$GITHUB_ENV"
+          echo "PUBLISHED_URL=https://registry.561.group/@red-cup-engineering/xml-document-rendering-service/-/xml-document-rendering-service-0.1.8-dev.326.tgz" >> "$GITHUB_ENV"
+          echo "PUBLISHED_SRI=sha512-h5TbdTBL0SR9jLjYqcgS2KtFWAn3AkqXWRlWV/3rdtKaQrWkngjH4gvEIadM1AnX5wpCV1UlK0FDOEbbRNreSA==" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.21.0"
+      - name: Check exact handler identity before any artifact operation
+        id: receiving_handler
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(node --version)" = v24.21.0
+          test "$(npm --version)" = 11.19.0
+          export NPM_ROOT="$(dirname "$(dirname "$(readlink -f "$(command -v npm)")")")"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          import {execFileSync} from 'node:child_process';
+          const root=process.env.NPM_ROOT;
+          assert.equal(JSON.parse(fs.readFileSync(root+'/node_modules/pacote/package.json')).version,'21.5.1');
+          // npm v11.19.0 vendor sources: raw tarball.file, not manifest/extract.
+          const blobs={
+            'pacote/bin/index.js':'f35b62ca71a537115d33c197e93a185a91958aae',
+            'pacote/lib/fetcher.js':'8324f46f1f30783c5740a32e989f12b6d8542f87',
+            'pacote/lib/remote.js':'bd321e65a1f18a4440310a7dc000c7250a4292d0',
+            'npm-registry-fetch/lib/index.js':'91d450f245f05bd75391d3aafc95768009a8b3f0',
+            'make-fetch-happen/lib/fetch.js':'233ba67e1655028526d9c478530c3d92c2ed186c',
+          };
+          for(const [path,sha] of Object.entries(blobs))
+            assert.equal(execFileSync('git',['hash-object',root+'/node_modules/'+path],{encoding:'utf8'}).trim(),sha,path);
+          fs.writeFileSync(process.env.RECEIPT_DIR+'/toolchain.json',JSON.stringify({
+            node:process.version,npm:'11.19.0',pacote:'21.5.1',vendorBlobs:blobs,
+            limits:{archiveBytes:262144,expandedTarBytes:524288,wallSeconds:60},
+            transport:'Public HTTPS start URL; standard bounded redirects; final URL not exposed by CLI; no credentials/cookies inherited; SRI binds bytes, not final origin.',
+            retries:'fetchRetries=0; Pacote may internally retry integrity corruption once',
+          },null,2)+'\n');
+          NODE
+          echo "PACOTE_CLI=$NPM_ROOT/node_modules/pacote/bin/index.js" >> "$GITHUB_ENV"
+      - name: Read immutable public source baseline
+        uses: actions/checkout@v4
+        with:
+          ref: aa8eeaaf1870b7cb9e52b9d90c404e1799414d13
+          path: published-baseline
+          persist-credentials: false
+      - name: Admit only an already-selected compatible dependency closure
+        id: receiving_closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C published-baseline rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git -C published-baseline rev-parse 'HEAD^{tree}')" = "$SOURCE_TREE"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {isDeepStrictEqual} from 'node:util';
+          import assert from 'node:assert/strict';
+          const baseline=JSON.parse(fs.readFileSync('published-baseline/package.json'));
+          const current=JSON.parse(fs.readFileSync('package.json'));
+          const fields=['dependencies','devDependencies','optionalDependencies','peerDependencies','overrides'];
+          const compatible=fields.every(field=>isDeepStrictEqual(baseline[field],current[field]));
+          assert.deepEqual(baseline.scripts,{test:'node --test test/*.test.mjs'});
+          assert.deepEqual(baseline.files,['src']);
+          const result={compatible,registry:'https://registry.561.group/',dependencies:baseline.dependencies,devDependencies:baseline.devDependencies,
+            disposition:'Inherited external runtime, transitive and comparator dependencies remain architectural debt. No extra install or new dependency acquisition.',
+            reason:compatible?'Reuse original qualification closure':'Historical receiving not executed: current declarations differ; current-source qualification remains independent'};
+          fs.writeFileSync(process.env.RECEIPT_DIR+'/dependency-declarations.json',JSON.stringify(result,null,2)+'\n');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,'compatible='+compatible+'\n');
+          baseline.version=process.env.PUBLISHED_VERSION;
+          baseline.gitHead=process.env.SOURCE_COMMIT;
+          fs.writeFileSync(process.env.RECEIPT_DIR+'/expected-package.json',JSON.stringify(baseline,null,2)+'\n');
+          // Lock URLs must not expose embedded credentials or query secrets.
+          const lock=JSON.parse(fs.readFileSync('package-lock.json'));
+          for(const entry of Object.values(lock.packages??{})) if(entry.resolved?.startsWith('http')) {
+            const url=new URL(entry.resolved);
+            assert(!url.username&&!url.password&&!url.search&&!url.hash,'unsafe resolved URL in receipt');
+          }
+          fs.copyFileSync('package-lock.json',process.env.RECEIPT_DIR+'/package-lock.json');
+          console.log(JSON.stringify({compatible,additionalDependencyInstalls:0}));
+          NODE
+      - name: Receive exact compressed artifact without archive interpretation
+        if: steps.receiving_closure.outputs.compatible == 'true'
+        id: receiving_acquire
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Bash file-size units are 1024 bytes. The CLI reads its arguments,
+          # not npmrc. No auth, proxy, NODE_OPTIONS or cookies are inherited.
+          (
+            ulimit -f 256
+            timeout --signal=TERM --kill-after=5s 60s env -i \
+              PATH="$PATH" HOME="$RECEIPT_DIR/home" TMPDIR="$RUNNER_TEMP" \
+              node "$PACOTE_CLI" tarball "$PUBLISHED_URL" "$RECEIPT_DIR/published.tgz" \
+              --integrity="$PUBLISHED_SRI" --cache="$RECEIPT_DIR/cache" \
+              --fetch-retries=0 --timeout=30000 --ignore-scripts
+          ) > "$RECEIPT_DIR/acquisition.json" 2> "$RECEIPT_DIR/acquisition.stderr"
+      - name: Verify every published member before creating executable files
+        if: steps.receiving_closure.outputs.compatible == 'true'
+        id: receiving_members
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64, gzip, hashlib, io, json, os, pathlib, tarfile
+          root=pathlib.Path(os.environ['RECEIPT_DIR'])
+          with (root/'published.tgz').open('rb') as stream:
+              raw=stream.read(262145)
+          assert 0 < len(raw) <= 262144, 'compressed archive bound'
+          sri='sha512-'+base64.b64encode(hashlib.sha512(raw).digest()).decode()
+          assert sri==os.environ['PUBLISHED_SRI'], 'archive integrity mismatch'
+          with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
+              expanded=stream.read(524289)
+          assert len(expanded)<=524288, 'expanded tar bound'
+          source=pathlib.Path('published-baseline')
+          expected={p.relative_to(source).as_posix():p.read_bytes() for p in (source/'src').rglob('*') if p.is_file()}
+          expected.update({name:(source/name).read_bytes() for name in ['LICENSE','README.md']})
+          expected['package.json']=(root/'expected-package.json').read_bytes()
+          assert len(expected)==13, 'unexpected source carrier'
+          received={}
+          with tarfile.open(fileobj=io.BytesIO(expanded),mode='r:') as archive:
+              for member in archive:
+                  assert member.name.startswith('package/'), 'unexpected archive root'
+                  name=member.name[len('package/'):]
+                  assert name in expected and name not in received, 'extra, unsafe or duplicate member'
+                  assert member.type in (tarfile.REGTYPE,tarfile.AREGTYPE), 'nonregular member'
+                  assert member.sparse is None and not member.pax_headers, 'unsupported metadata'
+                  assert member.size==len(expected[name]), 'member byte length mismatch'
+                  data=archive.extractfile(member).read(member.size+1)
+                  assert data==expected[name], 'source payload mismatch: '+name
+                  received[name]=data
+          assert received.keys()==expected.keys(), 'missing member'
+          # Never extractall. Write only verified exact names, after every
+          # member passed; tests and dependency links are added subsequently.
+          target=root/'received'
+          target.mkdir()
+          for name,data in received.items():
+              path=target/name
+              path.parent.mkdir(parents=True,exist_ok=True)
+              path.write_bytes(data)
+          proof={'sourceCommit':os.environ['SOURCE_COMMIT'],'sourceTree':os.environ['SOURCE_TREE'],
+              'version':os.environ['PUBLISHED_VERSION'],'url':os.environ['PUBLISHED_URL'],
+              'integrity':sri,'sha1':hashlib.sha1(raw).hexdigest(),'archiveBytes':len(raw),
+              'expandedTarBytes':len(expanded),'memberCount':len(received),'payloadBytes':sum(map(len,received.values())),
+              'members':{name:{'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()} for name,data in sorted(received.items())},
+              'manifestTransform':'version and gitHead, JSON two-space indentation and final newline',
+              'scope':'Exact archive and full payload equivalence; not publisher execution or production uptake'}
+          (root/'payload-receipt.json').write_text(json.dumps(proof,indent=2)+'\n')
+          print(json.dumps({'archiveBytes':len(raw),'members':len(received),'payloadVerified':True}))
+          PY
+          ln -s "$GITHUB_WORKSPACE/node_modules" "$RECEIPT_DIR/received/node_modules"
+          cp -R published-baseline/test "$RECEIPT_DIR/received/test"
+      - name: Run complete original suite against received published source
+        if: steps.receiving_closure.outputs.compatible == 'true'
+        id: receiving_tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RECEIPT_DIR/received"
+          node --test --test-reporter=tap test/*.test.mjs | tee "$RECEIPT_DIR/received-tests.tap"
+          for expectation in 'tests 18' 'pass 18' 'fail 0' 'skipped 0' 'cancelled 0'; do
+            grep -qx "# $expectation" "$RECEIPT_DIR/received-tests.tap"
+          done
+      - name: Receive four-operation public API from a separate consumer
+        if: steps.receiving_closure.outputs.compatible == 'true'
+        id: receiving_consumer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RECEIPT_DIR/consumer/node_modules/@red-cup-engineering"
+          ln -s "$RECEIPT_DIR/received" "$RECEIPT_DIR/consumer/node_modules/@red-cup-engineering/xml-document-rendering-service"
+          cd "$RECEIPT_DIR/consumer"
+          node --input-type=module <<'NODE' | tee "$RECEIPT_DIR/consumer-result.json"
+          import assert from 'node:assert/strict';
+          import {realpathSync} from 'node:fs';
+          import {fileURLToPath} from 'node:url';
+          const spec='@red-cup-engineering/xml-document-rendering-service/transformations';
+          assert.equal(realpathSync(fileURLToPath(import.meta.resolve(spec))),process.env.RECEIPT_DIR+'/received/src/xml/transformations.mjs');
+          const {xmlToJsonTree,jsonTreeToXml,normalizeXml,checkXmlWellFormedness}=await import(spec);
+          const xml='<r a="1">x<b/>y</r>',report=xmlToJsonTree({xml});
+          assert.equal(report.document.children[0].children.map(n=>n.kind).join(','),'text,element,text');
+          assert.equal(jsonTreeToXml({document:report.document}).xml,xml);
+          assert.equal(normalizeXml({xml}).changed,false);
+          assert.equal(checkXmlWellFormedness({xml}).wellFormed,true);
+          for(const xml of ['<r><x></r>','<!DOCTYPEfoo>']) assert.equal(checkXmlWellFormedness({xml}).wellFormed,false);
+          assert.throws(()=>xmlToJsonTree({xml:'<!DOCTYPE r><r/>'}),TypeError);
+          assert.throws(()=>xmlToJsonTree({xml:'x'.repeat(65537)}),RangeError);
+          console.log(JSON.stringify({publicImport:spec,resolvedFromReceivedArtifact:true,operations:4,passed:true}));
+          NODE
+      - name: Record receiving outcomes including failure and nonexecution
+        if: always()
+        shell: bash
+        env:
+          RECEIPT_DIR: ${{ runner.temp }}/xml-published-receiving
+          HANDLER_OUTCOME: ${{ steps.receiving_handler.outcome }}
+          CLOSURE_OUTCOME: ${{ steps.receiving_closure.outcome }}
+          ACQUIRE_OUTCOME: ${{ steps.receiving_acquire.outcome }}
+          MEMBERS_OUTCOME: ${{ steps.receiving_members.outcome }}
+          TESTS_OUTCOME: ${{ steps.receiving_tests.outcome }}
+          CONSUMER_OUTCOME: ${{ steps.receiving_consumer.outcome }}
+          WORKFLOW_COMMIT: ${{ github.sha }}
+          WORKFLOW_RUN: ${{ github.run_id }}
+        run: |
+          mkdir -p "$RECEIPT_DIR"
+          python3 - <<'PY'
+          import json, os, pathlib
+          phases={name.lower():os.environ[name+'_OUTCOME'] for name in ['HANDLER','CLOSURE','ACQUIRE','MEMBERS','TESTS','CONSUMER']}
+          result={'workflowCommit':os.environ['WORKFLOW_COMMIT'],'runId':os.environ['WORKFLOW_RUN'],
+            'phases':phases,'received':all(value=='success' for value in phases.values()),
+            'replay':'Pinned source/artifact and recorded resolved lock; supplier availability remains required',
+            'dependencyPolicy':'Inherited external runtime/transitive/comparator debt; no added install; not no-external compliance'}
+          pathlib.Path(os.environ['RECEIPT_DIR'],'outcomes.json').write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result))
+          PY
+      - name: Preserve exact published artifact and receiving failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xml-published-receiving-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/xml-published-receiving/*.json
+            ${{ runner.temp }}/xml-published-receiving/*.stderr
+            ${{ runner.temp }}/xml-published-receiving/*.tap
+            ${{ runner.temp }}/xml-published-receiving/published.tgz
+          if-no-files-found: error
