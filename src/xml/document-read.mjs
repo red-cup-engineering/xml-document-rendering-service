@@ -1,6 +1,6 @@
 /** Ordered XML 1.0/Namespaces 1.0 nodes; DTD and XML 1.1 are explicit exclusions. */
 import { parseXml, XmlError } from "@rgrove/parse-xml";
-import { qname } from "xml-name-validator";
+import { qname } from "./names.mjs";
 export { XmlError };
 export class XmlNamespaceError extends Error {}
 export class UnsupportedXmlFeatureError extends TypeError {}

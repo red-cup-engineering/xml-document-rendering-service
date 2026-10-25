@@ -38,8 +38,64 @@ jobs:
           node-version: "24"
       - name: Install exact declared package and comparator dependencies
         run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Record actual production closure and validator provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ls --omit=dev --all --json > production-dependencies.json
+          explain_status=0
+          npm explain xml-name-validator --json > xml-name-validator-explain.json 2> xml-name-validator-explain.stderr || explain_status=$?
+          EXPLAIN_STATUS="$explain_status" node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const manifest=JSON.parse(fs.readFileSync('package.json'));
+          const tree=JSON.parse(fs.readFileSync('production-dependencies.json'));
+          const retainedPaths=[];
+          function visit(node,path) {
+            for (const [name,entry] of Object.entries(node.dependencies??{})) {
+              const next=[...path,name+'@'+entry.version];
+              if (name==='xml-name-validator') retainedPaths.push(next);
+              visit(entry,next);
+            }
+          }
+          visit(tree,[tree.name+'@'+tree.version]);
+          const directRemoved=!['dependencies','devDependencies','optionalDependencies','peerDependencies']
+            .some(field=>Object.hasOwn(manifest[field]??{},'xml-name-validator'));
+          const explainStatus=Number(process.env.EXPLAIN_STATUS);
+          const explanation=JSON.parse(fs.readFileSync('xml-name-validator-explain.json'));
+          // npm explain inventories all installed packages (including dev);
+          // absence is its documented-source error carrier, not an empty list.
+          let productionExplanations=[];
+          if (explainStatus===0) {
+            assert(Array.isArray(explanation) && explanation.length>0,'unexpected npm explain carrier');
+            productionExplanations=explanation.filter(entry=>!entry.dev && !entry.extraneous);
+          } else {
+            assert.equal(explainStatus,1,'unexpected npm explain exit');
+            assert.equal(explanation.error?.summary,
+              'No dependencies found matching xml-name-validator','unexpected npm explain failure');
+          }
+          assert.equal(productionExplanations.length>0,retainedPaths.length>0,'production tree/explanation disagree');
+          const result={directRemoved,retainedPaths,validatorAbsentFromProduction:retainedPaths.length===0,
+            evidence:['production-dependencies.json','xml-name-validator-explain.json'],
+            scope:'Exact CI production selection, not all external-dependency removal or production installation'};
+          fs.writeFileSync('xml-name-dependency-receipt.json',JSON.stringify(result,null,2)+'\n');
+          console.log(JSON.stringify(result));
+          NODE
+      - name: Preserve production closure evidence even when qualification fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xml-production-closure-${{ github.sha }}
+          retention-days: 7
+          path: |
+            production-dependencies.json
+            xml-name-validator-explain.json
+            xml-name-validator-explain.stderr
+            xml-name-dependency-receipt.json
+          if-no-files-found: error
       - name: Native parser, adversarial, W3C and real competitor comparisons
         run: |
+          node --check src/xml/names.mjs
           node --check src/xml/document-read.mjs
           node --check src/xml/transformations.mjs
           npm test
@@ -53,6 +109,14 @@ jobs:
             node --input-type=module <<'NODE'
           import {xmlToJsonTree, jsonTreeToXml, normalizeXml, checkXmlWellFormedness}
             from "@red-cup-engineering/xml-document-rendering-service/transformations";
+          const unicode = '<猫 xmlns:p="urn:p" p:名="v"><p:字/></猫>';
+          const unicodeTree = xmlToJsonTree({xml:unicode}).document;
+          if (jsonTreeToXml({document:unicodeTree}).xml !== unicode ||
+              normalizeXml({xml:unicode}).changed ||
+              !checkXmlWellFormedness({xml:unicode}).wellFormed)
+            throw new Error("packed Unicode name/QName consumer failed");
+          if (checkXmlWellFormedness({xml:"<p:猫/>"}).wellFormed)
+            throw new Error("packed namespace refusal failed");
           const xml = '<r a="1">x<b/>y</r>';
           const report = xmlToJsonTree({xml});
           if (report.document.children[0].children.map(n=>n.kind).join(",") !== "text,element,text")
@@ -69,6 +133,16 @@ jobs:
           NODE
           )
           (cd "$RUNNER_TEMP/qualified" && sha256sum *.tgz) | tee qualified-package.sha256
+      - name: Require actual production validator removal, not just a renamed direct edge
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const receipt=JSON.parse(fs.readFileSync('xml-name-dependency-receipt.json'));
+          assert(receipt.directRemoved,'direct validator declaration remains');
+          assert(receipt.validatorAbsentFromProduction,
+            'transitive validator remains: '+JSON.stringify(receipt.retainedPaths));
+          NODE
       - name: Preserve tested dependency selection and actual package
         uses: actions/upload-artifact@v4
         with:

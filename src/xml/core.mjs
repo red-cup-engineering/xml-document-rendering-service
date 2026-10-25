@@ -1,7 +1,7 @@
 /** XML node construction and serialization; HTML may reuse lexical escaping. */
 import { define } from "@red-cup-engineering/computer-content-engineering-services-section/typed-resource-classification";
 import { parseXml } from "@rgrove/parse-xml";
-import { name as validName } from "xml-name-validator";
+import { name as validName } from "./names.mjs";
 
 /** Lexical escaping only; XML character admission belongs to the writer. */
 export function escapeXmlText(value) {
