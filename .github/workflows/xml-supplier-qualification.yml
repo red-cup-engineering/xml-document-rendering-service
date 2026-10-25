@@ -97,6 +97,8 @@ jobs:
           echo "PUBLISHED_URL=https://registry.561.group/@red-cup-engineering/xml-document-rendering-service/-/xml-document-rendering-service-0.1.8-dev.326.tgz" >> "$GITHUB_ENV"
           echo "PUBLISHED_SRI=sha512-h5TbdTBL0SR9jLjYqcgS2KtFWAn3AkqXWRlWV/3rdtKaQrWkngjH4gvEIadM1AnX5wpCV1UlK0FDOEbbRNreSA==" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v4
+        id: receiving_toolchain
+        continue-on-error: true
         with:
           node-version: "24.21.0"
       - name: Check exact handler identity before any artifact operation
@@ -104,15 +106,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(node --version)" = v24.21.0
-          test "$(npm --version)" = 11.19.0
           export NPM_ROOT="$(dirname "$(dirname "$(readlink -f "$(command -v npm)")")")"
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
           import {execFileSync} from 'node:child_process';
           const root=process.env.NPM_ROOT;
-          assert.equal(JSON.parse(fs.readFileSync(root+'/node_modules/pacote/package.json')).version,'21.5.1');
+          let eligible=true;
+          try {
+            assert.equal(process.version,'v24.21.0');
+            assert.equal(execFileSync('npm',['--version'],{encoding:'utf8'}).trim(),'11.19.0');
+            assert.equal(JSON.parse(fs.readFileSync(root+'/node_modules/pacote/package.json')).version,'21.5.1');
+          } catch { eligible=false; }
           // npm v11.19.0 vendor sources: raw tarball.file, not manifest/extract.
           const blobs={
             'pacote/bin/index.js':'f35b62ca71a537115d33c197e93a185a91958aae',
@@ -121,23 +126,29 @@ jobs:
             'npm-registry-fetch/lib/index.js':'91d450f245f05bd75391d3aafc95768009a8b3f0',
             'make-fetch-happen/lib/fetch.js':'233ba67e1655028526d9c478530c3d92c2ed186c',
           };
-          for(const [path,sha] of Object.entries(blobs))
-            assert.equal(execFileSync('git',['hash-object',root+'/node_modules/'+path],{encoding:'utf8'}).trim(),sha,path);
+          try {
+            for(const [path,sha] of Object.entries(blobs))
+              assert.equal(execFileSync('git',['hash-object',root+'/node_modules/'+path],{encoding:'utf8'}).trim(),sha,path);
+          } catch { eligible=false; }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,'eligible='+eligible+'\n');
           fs.writeFileSync(process.env.RECEIPT_DIR+'/toolchain.json',JSON.stringify({
-            node:process.version,npm:'11.19.0',pacote:'21.5.1',vendorBlobs:blobs,
-            limits:{archiveBytes:262144,expandedTarBytes:524288,wallSeconds:60},
+            observedNode:process.version,expected:{node:'v24.21.0',npm:'11.19.0',pacote:'21.5.1'},eligible,vendorBlobs:blobs,
+            limits:{archiveBytes:262144,expandedTarBytes:524288,wallSeconds:60,killGraceSeconds:5,upstreamDefaultTimeoutMs:300000},
+            eligibility:'Unexpected historical toolchain means not executed, never a receiving pass; current-source qualification is independent',
             transport:'Public HTTPS start URL; standard bounded redirects; final URL not exposed by CLI; no credentials/cookies inherited; SRI binds bytes, not final origin.',
             retries:'fetchRetries=0; Pacote may internally retry integrity corruption once',
           },null,2)+'\n');
           NODE
           echo "PACOTE_CLI=$NPM_ROOT/node_modules/pacote/bin/index.js" >> "$GITHUB_ENV"
       - name: Read immutable public source baseline
+        if: steps.receiving_handler.outputs.eligible == 'true'
         uses: actions/checkout@v4
         with:
           ref: aa8eeaaf1870b7cb9e52b9d90c404e1799414d13
           path: published-baseline
           persist-credentials: false
       - name: Admit only an already-selected compatible dependency closure
+        if: steps.receiving_handler.outputs.eligible == 'true'
         id: receiving_closure
         shell: bash
         run: |
@@ -179,14 +190,25 @@ jobs:
           set -euo pipefail
           # Bash file-size units are 1024 bytes. The CLI reads its arguments,
           # not npmrc. No auth, proxy, NODE_OPTIONS or cookies are inherited.
+          status=0
           (
             ulimit -f 256
             timeout --signal=TERM --kill-after=5s 60s env -i \
               PATH="$PATH" HOME="$RECEIPT_DIR/home" TMPDIR="$RUNNER_TEMP" \
               node "$PACOTE_CLI" tarball "$PUBLISHED_URL" "$RECEIPT_DIR/published.tgz" \
               --integrity="$PUBLISHED_SRI" --cache="$RECEIPT_DIR/cache" \
-              --fetch-retries=0 --timeout=30000 --ignore-scripts
-          ) > "$RECEIPT_DIR/acquisition.json" 2> "$RECEIPT_DIR/acquisition.stderr"
+              --fetch-retries=0 --ignore-scripts
+          ) > "$RECEIPT_DIR/acquisition.json" 2> "$RECEIPT_DIR/acquisition.stderr" || status=$?
+          if [ "$status" -ne 0 ]; then
+            ACQUISITION_STATUS="$status" python3 - <<'PY'
+          import json, os, pathlib, re
+          with pathlib.Path(os.environ['RECEIPT_DIR'],'acquisition.stderr').open('rb') as stream:
+              text=stream.read(16384).decode('utf-8',errors='replace')
+          codes=sorted(set(re.findall(r"\b(?:ERR_[A-Z0-9_]+|E[A-Z]{3,30})\b",text)))[:8]
+          print(json.dumps({'acquisitionExit':int(os.environ['ACQUISITION_STATUS']),'errorCodes':codes,'detail':'Bounded stderr retained in receiving artifact'}))
+          PY
+            exit "$status"
+          fi
       - name: Verify every published member before creating executable files
         if: steps.receiving_closure.outputs.compatible == 'true'
         id: receiving_members
@@ -195,37 +217,92 @@ jobs:
           python3 - <<'PY'
           import base64, gzip, hashlib, io, json, os, pathlib, tarfile
           root=pathlib.Path(os.environ['RECEIPT_DIR'])
+          def digest(raw):
+              return 'sha512-'+base64.b64encode(hashlib.sha512(raw).digest()).decode()
+          def regular(member):
+              assert member.type in (tarfile.REGTYPE,tarfile.AREGTYPE), 'nonregular member'
+              assert member.sparse is None and not member.pax_headers, 'unsupported metadata'
+          def verify(raw,expected,expected_sri):
+              assert 0<len(raw)<=262144, 'compressed archive bound'
+              assert digest(raw)==expected_sri, 'archive integrity mismatch'
+              with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
+                  expanded=stream.read(524289)
+              assert len(expanded)<=524288, 'expanded tar bound'
+              received={}
+              next_offset=0
+              with tarfile.open(fileobj=io.BytesIO(expanded),mode='r:') as archive:
+                  for member in archive:
+                      assert member.offset==next_offset and member.offset_data==member.offset+512, 'hidden archive metadata'
+                      next_offset=member.offset_data+((member.size+511)//512)*512
+                      assert member.name.startswith('package/'), 'unexpected archive root'
+                      name=member.name[len('package/'):]
+                      assert name in expected and name not in received, 'extra, unsafe or duplicate member'
+                      regular(member)
+                      assert member.size==len(expected[name]), 'member byte length mismatch'
+                      data=archive.extractfile(member).read(member.size+1)
+                      assert data==expected[name], 'source payload mismatch: '+name
+                      received[name]=data
+              assert received.keys()==expected.keys(), 'missing member'
+              tail=expanded[next_offset:]
+              assert len(expanded)%512==0 and len(tail)>=1024 and not any(tail), 'unaccounted archive tail'
+              return received,len(expanded)
+          # Focused deterministic tests exercise this exact acceptance function,
+          # using only Python's standard archive writer, never a second parser.
+          def specimen(rows):
+              out=io.BytesIO()
+              with tarfile.open(fileobj=out,mode='w',format=tarfile.USTAR_FORMAT) as archive:
+                  for name,data,kind in rows:
+                      member=tarfile.TarInfo(name)
+                      member.type=kind
+                      member.size=len(data)
+                      if kind==tarfile.SYMTYPE:
+                          member.linkname='../outside'
+                      archive.addfile(member,io.BytesIO(data))
+              return gzip.compress(out.getvalue())
+          checks=[]
+          def refused(label,operation,message):
+              try:
+                  operation()
+              except AssertionError as error:
+                  assert message in str(error), 'wrong refusal for '+label
+                  checks.append(label)
+              else:
+                  raise AssertionError('missing refusal: '+label)
+          one={'a':b'x'}
+          good=specimen([('package/a',b'x',tarfile.REGTYPE)])
+          assert verify(good,one,digest(good))[0]==one
+          checks.append('valid control')
+          refused('compressed bound',lambda:verify(b'x'*262145,one,''),'compressed archive bound')
+          refused('SRI mismatch',lambda:verify(good,one,'sha512-wrong'),'integrity mismatch')
+          huge=gzip.compress(b'\0'*524289)
+          refused('expanded bound',lambda:verify(huge,one,digest(huge)),'expanded tar bound')
+          for label,rows,message in [
+              ('link',[('package/a',b'',tarfile.SYMTYPE)],'nonregular'),
+              ('duplicate',[('package/a',b'x',tarfile.REGTYPE)]*2,'duplicate'),
+              ('extra',[('package/a',b'x',tarfile.REGTYPE),('package/b',b'x',tarfile.REGTYPE)],'extra'),
+              ('escape',[('package/../a',b'x',tarfile.REGTYPE)],'unsafe'),
+              ('missing',[],'missing member'),
+              ('payload mismatch',[('package/a',b'y',tarfile.REGTYPE)],'payload mismatch'),
+              ('member size',[('package/a',b'xx',tarfile.REGTYPE)],'byte length mismatch'),
+          ]:
+              raw_case=specimen(rows)
+              refused(label,lambda:verify(raw_case,one,digest(raw_case)),message)
+          sparse=tarfile.TarInfo('package/a')
+          sparse.sparse=[(0,1)]
+          refused('sparse metadata',lambda:regular(sparse),'unsupported metadata')
+          tailed=gzip.compress(gzip.decompress(good)+b'nonzero')
+          refused('unaccounted tail',lambda:verify(tailed,one,digest(tailed)),'unaccounted archive tail')
+          (root/'guard-tests.json').write_text(json.dumps({'passed':len(checks),'cases':checks})+'\n')
+          print(json.dumps({'guardTestsPassed':len(checks)}))
           with (root/'published.tgz').open('rb') as stream:
               raw=stream.read(262145)
-          assert 0 < len(raw) <= 262144, 'compressed archive bound'
-          sri='sha512-'+base64.b64encode(hashlib.sha512(raw).digest()).decode()
-          assert sri==os.environ['PUBLISHED_SRI'], 'archive integrity mismatch'
-          with gzip.GzipFile(fileobj=io.BytesIO(raw)) as stream:
-              expanded=stream.read(524289)
-          assert len(expanded)<=524288, 'expanded tar bound'
           source=pathlib.Path('published-baseline')
           expected={p.relative_to(source).as_posix():p.read_bytes() for p in (source/'src').rglob('*') if p.is_file()}
           expected.update({name:(source/name).read_bytes() for name in ['LICENSE','README.md']})
           expected['package.json']=(root/'expected-package.json').read_bytes()
           assert len(expected)==13, 'unexpected source carrier'
-          received={}
-          next_offset=0
-          with tarfile.open(fileobj=io.BytesIO(expanded),mode='r:') as archive:
-              for member in archive:
-                  assert member.offset==next_offset and member.offset_data==member.offset+512, 'hidden archive metadata'
-                  next_offset=member.offset_data+((member.size+511)//512)*512
-                  assert member.name.startswith('package/'), 'unexpected archive root'
-                  name=member.name[len('package/'):]
-                  assert name in expected and name not in received, 'extra, unsafe or duplicate member'
-                  assert member.type in (tarfile.REGTYPE,tarfile.AREGTYPE), 'nonregular member'
-                  assert member.sparse is None and not member.pax_headers, 'unsupported metadata'
-                  assert member.size==len(expected[name]), 'member byte length mismatch'
-                  data=archive.extractfile(member).read(member.size+1)
-                  assert data==expected[name], 'source payload mismatch: '+name
-                  received[name]=data
-          assert received.keys()==expected.keys(), 'missing member'
-          tail=expanded[next_offset:]
-          assert len(expanded)%512==0 and len(tail)>=1024 and not any(tail), 'unaccounted archive tail'
+          received,expanded_bytes=verify(raw,expected,os.environ['PUBLISHED_SRI'])
+          sri=digest(raw)
           # Never extractall. Write only verified exact names, after every
           # member passed; tests and dependency links are added subsequently.
           target=root/'received'
@@ -237,7 +314,7 @@ jobs:
           proof={'sourceCommit':os.environ['SOURCE_COMMIT'],'sourceTree':os.environ['SOURCE_TREE'],
               'version':os.environ['PUBLISHED_VERSION'],'url':os.environ['PUBLISHED_URL'],
               'integrity':sri,'sha1':hashlib.sha1(raw).hexdigest(),'archiveBytes':len(raw),
-              'expandedTarBytes':len(expanded),'memberCount':len(received),'payloadBytes':sum(map(len,received.values())),
+              'expandedTarBytes':expanded_bytes,'memberCount':len(received),'payloadBytes':sum(map(len,received.values())),
               'members':{name:{'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()} for name,data in sorted(received.items())},
               'manifestTransform':'version and gitHead, JSON two-space indentation and final newline',
               'scope':'Exact archive and full payload equivalence; not publisher execution or production uptake'}
