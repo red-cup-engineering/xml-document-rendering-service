@@ -96,6 +96,26 @@ test('direct reader rejects dense XML allocations before parse without mistaking
    'ordinary native malformed-markup diagnostics survive preflight');
 });
 
+test('raw input limits and JSON fanout refuse before unbounded traversal',()=>{
+ // An oversize string may contain bad Unicode; resource rejection must happen
+ // without calling the potentially expensive Unicode scanner at all.
+ const original=String.prototype.isWellFormed;
+ try {
+  String.prototype.isWellFormed=function(){throw new Error('oversize Unicode scan was invoked');};
+  assert.throws(()=>readXmlDocument('x'.repeat(1048577)), /maximumInputBytes before parsing/);
+  for(const operation of [xmlToJsonTree,normalizeXml,checkXmlWellFormedness])
+   assert.throws(()=>operation({xml:'x'.repeat(65537)}), /65536 UTF-8 bytes/);
+ } finally {
+  String.prototype.isWellFormed=original;
+ }
+ // Reject all queued JSON siblings before touching any child. This is a
+ // tested allocation frontier, not a synthetic proof of native deployment.
+ const siblings=Array(100000).fill(root('item'));
+ siblings[Symbol.iterator]=()=>{throw new Error('wide child list was traversed');};
+ assert.throws(()=>jsonTreeToXml({document:wrap(siblings)}), /8192 nodes before traversal/);
+ assert.deepEqual(xmlToJsonTree({xml:'<r><x/><x/></r>'}).document.children[0].children.map(n=>n.kind),['element','element']);
+});
+
 test('the four authored XML Market operations preserve ordered semantics across 30 representative cases',()=>{
 
  for(const xml of XML_INTEROP_VALID) {

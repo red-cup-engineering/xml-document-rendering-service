@@ -87,15 +87,21 @@ export function readXmlDocument(xml, {
   maximumNodes = 8192, maximumDepth = 64, maximumAttributes = 8192,
   maximumInputBytes = DIRECT_READER_MAX_BYTES,
 } = {}) {
-  if (typeof xml !== "string" || !xml.isWellFormed()) {
+  if (typeof xml !== "string") {
     throw new TypeError("XML input requires well-formed Unicode text");
   }
   admitBudget(maximumNodes, "node", 1, 65536);
   admitBudget(maximumDepth, "depth", 0, 1024);
   admitBudget(maximumAttributes, "attribute", 0, 65536);
   admitBudget(maximumInputBytes, "input byte", 1, DIRECT_READER_MAX_BYTES);
-  if (Buffer.byteLength(xml, "utf8") > maximumInputBytes) {
+  // UTF-8 byte length is never below UTF-16 code-unit length, even for
+  // malformed surrogate pairs. Reject massive input in O(1) before either
+  // Unicode inspection or the bounded byte count.
+  if (xml.length > maximumInputBytes || Buffer.byteLength(xml, "utf8") > maximumInputBytes) {
     throw new RangeError("XML input exceeds maximumInputBytes before parsing");
+  }
+  if (!xml.isWellFormed()) {
+    throw new TypeError("XML input requires well-formed Unicode text");
   }
   admitLexicalStructure(xml, maximumNodes, maximumDepth, maximumAttributes);
   let unresolved = false;

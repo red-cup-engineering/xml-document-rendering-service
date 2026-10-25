@@ -7,8 +7,12 @@ function request(body, field) {
 }
 function input(body) {
   request(body,"xml");
-  if (typeof body.xml !== "string" || !body.xml.isWellFormed()) throw new TypeError("xml must be well-formed Unicode text");
-  if (Buffer.byteLength(body.xml) > MAX_XML) throw new RangeError("XML input exceeds 65536 UTF-8 bytes");
+  if (typeof body.xml !== "string") throw new TypeError("xml must be well-formed Unicode text");
+  // UTF-8 bytes cannot be fewer than UTF-16 code units. A large caller
+  // string is refused before traversing Unicode or allocating a parser tree.
+  if (body.xml.length > MAX_XML || Buffer.byteLength(body.xml) > MAX_XML)
+    throw new RangeError("XML input exceeds 65536 UTF-8 bytes");
+  if (!body.xml.isWellFormed()) throw new TypeError("xml must be well-formed Unicode text");
   return body.xml;
 }
 function read(xml) {
@@ -34,7 +38,7 @@ export function xmlToJsonTree(body) {
 }
 function admitDocument(value) {
   if (!value || value.kind !== "document") throw new TypeError("document must be a document node");
-  let count = 0, attributes = 0; const stack = [{ node: value, depth: 0 }], ancestors = new Set();
+  let count = 0, queuedNodes = 1, attributes = 0; const stack = [{ node: value, depth: 0 }], ancestors = new Set();
   while (stack.length) {
     const item = stack.pop(), node = item.node;
     if (item.exit) { ancestors.delete(node); continue; }
@@ -54,8 +58,13 @@ function admitDocument(value) {
     if (["document","element"].includes(node.kind)) {
       if (!Array.isArray(node.children)) throw new TypeError("XML node children must be an array");
       if (ancestors.has(node)) throw new TypeError("cyclic XML document");
+      // Cap the full pending frontier BEFORE pushing siblings. The visited
+      // count alone permits unbounded stack allocation from one huge array.
+      if (queuedNodes + node.children.length > 8192) throw new RangeError("XML exceeds 8192 nodes before traversal");
+      queuedNodes += node.children.length;
       ancestors.add(node); stack.push({ node, exit: true });
-      for (const child of node.children) stack.push({ node: child, depth: item.depth + 1 });
+      for (let index = 0; index < node.children.length; index++)
+        stack.push({ node: node.children[index], depth: item.depth + 1 });
     }
   }
   treeBytes(value);
