@@ -165,11 +165,11 @@ jobs:
           set -euo pipefail
           mkdir -p "$RECEIPT_DIR/home" "$RECEIPT_DIR/cache"
           echo "RECEIPT_DIR=$RECEIPT_DIR" >> "$GITHUB_ENV"
-          echo "SOURCE_COMMIT=aa8eeaaf1870b7cb9e52b9d90c404e1799414d13" >> "$GITHUB_ENV"
-          echo "SOURCE_TREE=0273700a78792431a93a0797af9e3d9d0201b5e3" >> "$GITHUB_ENV"
-          echo "PUBLISHED_VERSION=0.1.8-dev.326" >> "$GITHUB_ENV"
-          echo "PUBLISHED_URL=https://registry.561.group/@red-cup-engineering/xml-document-rendering-service/-/xml-document-rendering-service-0.1.8-dev.326.tgz" >> "$GITHUB_ENV"
-          echo "PUBLISHED_SRI=sha512-h5TbdTBL0SR9jLjYqcgS2KtFWAn3AkqXWRlWV/3rdtKaQrWkngjH4gvEIadM1AnX5wpCV1UlK0FDOEbbRNreSA==" >> "$GITHUB_ENV"
+          echo "SOURCE_COMMIT=86721503debaa9422f8a1b81be30c2f6670dea89" >> "$GITHUB_ENV"
+          echo "SOURCE_TREE=10c60fe1c7aa82bcffaaa948b48de7b395618e56" >> "$GITHUB_ENV"
+          echo "PUBLISHED_VERSION=0.1.8-dev.327" >> "$GITHUB_ENV"
+          echo "PUBLISHED_URL=https://registry.561.group/@red-cup-engineering/xml-document-rendering-service/-/xml-document-rendering-service-0.1.8-dev.327.tgz" >> "$GITHUB_ENV"
+          echo "PUBLISHED_SRI=sha512-isaTYlB59weQ4c9HXA3Uhhi4bJ6Mzml1A2WfBfarJHK1brVVlO/1uWqJ8z09xgmYdhWS3hrS8qwQuBpEjtqDvg==" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v4
         id: receiving_toolchain
         continue-on-error: true
@@ -218,7 +218,7 @@ jobs:
         if: steps.receiving_handler.outputs.eligible == 'true'
         uses: actions/checkout@v4
         with:
-          ref: aa8eeaaf1870b7cb9e52b9d90c404e1799414d13
+          ref: 86721503debaa9422f8a1b81be30c2f6670dea89
           path: published-baseline
           persist-credentials: false
       - name: Admit only an already-selected compatible dependency closure
@@ -374,7 +374,7 @@ jobs:
           expected={p.relative_to(source).as_posix():p.read_bytes() for p in (source/'src').rglob('*') if p.is_file()}
           expected.update({name:(source/name).read_bytes() for name in ['LICENSE','README.md']})
           expected['package.json']=(root/'expected-package.json').read_bytes()
-          assert len(expected)==13, 'unexpected source carrier'
+          assert len(expected)==14, 'unexpected source carrier'
           received,expanded_bytes=verify(raw,expected,os.environ['PUBLISHED_SRI'])
           sri=digest(raw)
           # Never extractall. Write only verified exact names, after every
@@ -405,7 +405,7 @@ jobs:
           set -euo pipefail
           cd "$RECEIPT_DIR/received"
           node --test --test-reporter=tap test/*.test.mjs | tee "$RECEIPT_DIR/received-tests.tap"
-          for expectation in 'tests 18' 'pass 18' 'fail 0' 'skipped 0' 'cancelled 0'; do
+          for expectation in 'tests 23' 'pass 23' 'fail 0' 'skipped 0' 'cancelled 0'; do
             grep -qx "# $expectation" "$RECEIPT_DIR/received-tests.tap"
           done
       - name: Receive four-operation public API from a separate consumer
