@@ -192,7 +192,7 @@ jobs:
           # not npmrc. No auth, proxy, NODE_OPTIONS or cookies are inherited.
           status=0
           (
-            ulimit -f 256
+            ulimit -f 256 || exit "$?"
             timeout --signal=TERM --kill-after=5s 60s env -i \
               PATH="$PATH" HOME="$RECEIPT_DIR/home" TMPDIR="$RUNNER_TEMP" \
               node "$PACOTE_CLI" tarball "$PUBLISHED_URL" "$RECEIPT_DIR/published.tgz" \
