@@ -209,8 +209,11 @@ jobs:
           expected['package.json']=(root/'expected-package.json').read_bytes()
           assert len(expected)==13, 'unexpected source carrier'
           received={}
+          next_offset=0
           with tarfile.open(fileobj=io.BytesIO(expanded),mode='r:') as archive:
               for member in archive:
+                  assert member.offset==next_offset and member.offset_data==member.offset+512, 'hidden archive metadata'
+                  next_offset=member.offset_data+((member.size+511)//512)*512
                   assert member.name.startswith('package/'), 'unexpected archive root'
                   name=member.name[len('package/'):]
                   assert name in expected and name not in received, 'extra, unsafe or duplicate member'
@@ -221,6 +224,8 @@ jobs:
                   assert data==expected[name], 'source payload mismatch: '+name
                   received[name]=data
           assert received.keys()==expected.keys(), 'missing member'
+          tail=expanded[next_offset:]
+          assert len(expanded)%512==0 and len(tail)>=1024 and not any(tail), 'unaccounted archive tail'
           # Never extractall. Write only verified exact names, after every
           # member passed; tests and dependency links are added subsequently.
           target=root/'received'
