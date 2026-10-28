@@ -56,7 +56,7 @@ jobs:
         working-directory: receiver
         run: |
           set -euo pipefail
-          npm install --ignore-scripts --no-audit --no-fund --no-save "$RUNNER_TEMP"/qualified/*.tgz
+          npm install --ignore-scripts --no-audit --no-fund --no-save --registry=https://registry.561.group/ "$RUNNER_TEMP"/qualified/*.tgz
           node -e 'const p=require("./node_modules/@red-cup-engineering/xml-document-rendering-service/package.json"); if(p.version!=="0.2.0") process.exit(1)'
           npm run check
           npm test
