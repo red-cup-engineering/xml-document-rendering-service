@@ -40,3 +40,43 @@ jobs:
             assert.ok(files.includes("src/xml/scxml-atomic-graph.mjs"),"package must include SCXML reader");
             console.log("Candidate SCXML reader is present in dry-run package.");
           '
+
+      - name: Pack the exact candidate locally for the existing Causeway receiver
+        run: |
+          mkdir -p "$RUNNER_TEMP/qualified"
+          npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP/qualified" --silent
+      - name: Retrieve the original private consumer at its reviewed source SHA
+        uses: actions/checkout@v4
+        with:
+          repository: causeway-services/public-ai-visibility-assurance-services-section
+          ref: 350d8eaa4eb63fab5d6a48a1c23dc1efa2532828
+          path: receiver
+          persist-credentials: false
+      - name: Qualify exact Causeway source-owned consumer using this unpacked candidate
+        working-directory: receiver
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund --no-save "$RUNNER_TEMP"/qualified/*.tgz
+          node -e 'const p=require("./node_modules/@red-cup-engineering/xml-document-rendering-service/package.json"); if(p.version!=="0.2.0") process.exit(1)'
+          npm run check
+          npm test
+      - name: Build exact create-only private prototype and verify purchase refusal
+        working-directory: receiver
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/ava-private"
+          npm run build:mock-prototype -- --output "$RUNNER_TEMP/ava-private/private-preview.html"
+          test -s "$RUNNER_TEMP/ava-private/private-preview.html"
+          grep -q 'source-offer-flow' "$RUNNER_TEMP/ava-private/private-preview.html"
+          grep -q 'Free triage and no purchase' "$RUNNER_TEMP/ava-private/private-preview.html"
+          if grep -Eiq '<button[^>]*>Buy</button>' "$RUNNER_TEMP/ava-private/private-preview.html"; then
+            echo "Private mock contains a purchase CTA" >&2
+            exit 1
+          fi
+          if npm run build:mock-prototype -- --output "$RUNNER_TEMP/ava-private/private-preview.html"; then
+            echo "Private build overwrote a create-only preview" >&2
+            exit 1
+          fi
+          # This temporary receiver's HTML is intentionally not deployed, uploaded,
+          # or presented as Morgan's independent acceptance.
+          sha256sum "$RUNNER_TEMP/ava-private/private-preview.html"
