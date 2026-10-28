@@ -49,14 +49,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: causeway-services/public-ai-visibility-assurance-services-section
-          ref: 350d8eaa4eb63fab5d6a48a1c23dc1efa2532828
+          ref: 27f0fb1ca18042d49d26ada43b83c1731e44245a
           path: receiver
           persist-credentials: false
       - name: Qualify exact Causeway source-owned consumer using this unpacked candidate
         working-directory: receiver
         run: |
           set -euo pipefail
-          npm install --ignore-scripts --no-audit --no-fund --no-save --registry=https://registry.561.group/ "$RUNNER_TEMP"/qualified/*.tgz
+          test "$(npm config get '@red-cup-engineering:registry')" = "https://registry.561.group/"
+          test "$(npm config get registry)" = "https://registry.npmjs.org/"
+          npm install --ignore-scripts --no-audit --no-fund --no-save "$RUNNER_TEMP"/qualified/*.tgz
           node -e 'const p=require("./node_modules/@red-cup-engineering/xml-document-rendering-service/package.json"); if(p.version!=="0.2.0") process.exit(1)'
           npm run check
           npm test
