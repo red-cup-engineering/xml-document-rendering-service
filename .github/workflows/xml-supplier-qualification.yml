@@ -97,6 +97,8 @@ jobs:
         run: |
           node --check src/xml/names.mjs
           node --check src/xml/document-read.mjs
+          node --check src/xml/scxml-atomic-graph.mjs
+          node --check test/scxml-atomic-graph.test.mjs
           node --check src/xml/transformations.mjs
           npm test
       - name: Exercise exact packed public API from an independent consumer
@@ -129,7 +131,24 @@ jobs:
             throw new Error("invalid XML falsely admitted");
           if (checkXmlWellFormedness({xml:"<!DOCTYPEfoo>"}).wellFormed)
             throw new Error("malformed DOCTYPE prefix falsely admitted");
-          console.log("packed XML four-operation consumer verified");
+          // Packaged import is the actual public consumer boundary, not the checkout path.
+          const {readAtomicScxmlGraph}=await import("@red-cup-engineering/xml-document-rendering-service/scxml-atomic-graph");
+          const scxml='<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" initial="opening" datamodel="null"><state id="opening"><transition event="advance.closed" target="closed"/></state><final id="closed"/></scxml>';
+          const graph=readAtomicScxmlGraph(scxml);
+          if(graph.initial!=="opening" || graph.states.length!==2 ||
+              graph.states[0].transitions[0].event!=="advance.closed" ||
+              graph.states[0].transitions[0].target!=="closed" ||
+              graph.states[1].final!==true)
+            throw new Error("packed SCXML atomic graph does not preserve admitted events");
+          let refused=false;
+          try {readAtomicScxmlGraph(scxml.replace('target="closed"','target="missing"')); }
+          catch(error){refused=error instanceof TypeError && /unresolved target/.test(error.message);}
+          if(!refused) throw new Error("packed SCXML graph did not refuse unbound target");
+          refused=false;
+          try {readAtomicScxmlGraph(scxml.replace('<final id="closed"/>','<final id="closed"><script>charge()</script></final>')); }
+          catch(error){refused=error instanceof TypeError && /SCXML|unsupported|final/.test(error.message);}
+          if(!refused) throw new Error("packed SCXML graph did not refuse executable final");
+          console.log("packed XML four-operation and SCXML atomic graph consumer verified");
           NODE
           )
           (cd "$RUNNER_TEMP/qualified" && sha256sum *.tgz) | tee qualified-package.sha256
