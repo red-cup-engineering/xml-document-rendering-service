@@ -1,0 +1,42 @@
+name: Qualify XML and atomic SCXML reader
+
+# Event-driven qualification of the original Red Cup source and package.
+# No release, publication, deployment, payment, or new work scheduler.
+on:
+  push:
+    branches:
+      - feat/scxml-atomic-offer-flow-source-reader-20261019
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-and-packed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Read candidate source
+        uses: actions/checkout@v4
+      - name: Install Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Resolve exact declared dependencies without lifecycle scripts
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Run the complete original native test suite
+        run: npm test
+      - name: Check published-package shape without publishing
+        run: |
+          npm pack --dry-run --json > "$RUNNER_TEMP/red-cup-package.json"
+          node --input-type=module -e '
+            import fs from "node:fs";
+            import assert from "node:assert/strict";
+            const manifest = JSON.parse(fs.readFileSync("package.json","utf8"));
+            assert.equal(manifest.name,"@red-cup-engineering/xml-document-rendering-service");
+            assert.equal(manifest.exports["./scxml-atomic-graph"].import,"./src/xml/scxml-atomic-graph.mjs");
+            const files = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+"/red-cup-package.json","utf8"))[0].files.map(x=>x.path);
+            assert.ok(files.includes("src/xml/scxml-atomic-graph.mjs"),"package must include SCXML reader");
+            console.log("Candidate SCXML reader is present in dry-run package.");
+          '
