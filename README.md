@@ -17,6 +17,57 @@ Limits are 65536 XML UTF-8 bytes, 1048576 JSON node bytes, 8192 nodes/attributes
 
 The fixture corpus retains primary W3C XMLTest and Edinburgh namespace cases from a pinned supplier revision, source URLs, hashes, expectations and redistribution notice. Its 62 selected cases exclude unsupported DTD and physical byte encodings; passing this subset does not establish complete W3C conformance.
 
+## Hyperbolic deterministic images
+
+`./svg/hyperbolic` projects the finite regular square patches owned by
+Metrologic into standard SVG. `projectHyperbolicScene(tiling, options)` accepts
+`camera: {center: {x,y}, rotation}`, square `size` (default 1000), `padding`
+(default 24) and decimal `precision` (default 6). It returns immutable `tiles`
+with `id`, SVG `path`, projected `center`, `vertices`, and `bounds`, plus the
+upstream finite-patch limits and truncation result. SVG coordinates increase
+rightward and downward; the mathematical source uses upward-positive y.
+Circular geodesics are SVG arc commands. Bounds include arc extrema.
+
+`renderHyperbolicSvg(scene, options)` serializes through the original XML
+writer. `title` and `description` are plain text; `labels` maps cell ids to
+`{label, href?}`. This bounded image profile permits local fragment links only.
+The optional `palette` contains 1..32 literal color values. `prefix` defaults
+to `hyperbolic`; use a distinct prefix for each SVG in one HTML document.
+Each cell supplies a reusable `prefix + '-clip-' + cellId` clip path in
+`objectBoundingBox` units. The clip uses the same projected path and its
+canonical bounds, so a browser can place a live DOM pane there without reconstructing
+the geometry or rasterizing its content.
+
+Bounds are canonicalized from minimum and maximum endpoints at the declared
+scene precision **before** dimensions or clip coefficients are derived. An
+outward half-quantum guard preserves containment; endpoints move outward by
+at most one scene-coordinate quantum. Both DOM placement and SVG clipping use
+these same canonical bounds. A dimension that collapses at the selected
+precision is refused rather than fabricated by padding. Quantizing only final
+coefficients cannot remove all cross-runtime decimal midpoint differences.
+
+Clip-transform coefficients are then serialized with guard digits derived from
+the scene precision, viewport size and tile dimensions. Their amplified
+rounding displacement is at most half one scene-coordinate quantum. This
+removes inconsequential floating-point differences from the normalized clip
+representation without rounding reciprocal scales to the path's lower
+precision. The native regression includes last-bit perturbations of all three
+independently received Node/Chromium camera fixtures: home, cell4 at rotation
+0.625, and cell8 at one degree.
+
+For the same admitted inputs, engine and precision, generated SVG bytes repeat
+exactly: no random layout, current time, network resources, font measurement
+or generated imagery enters the renderer. This is floating-point geometry
+with explicit finite limits, not a bitwise cross-engine theorem. Standard SVG
+keeps the vector scene reproducible; raster pixels may vary with the chosen
+font and rasterizer. TUFTE owns window identities, camera interactions and
+DOM state. Metrologic owns Poincare/Klein coordinates and inverse picking.
+This renderer owns only their SVG representation.
+
+Run `node --test --test-isolation=none --test-reporter=tap
+test/hyperbolic-svg.test.mjs` for repeatability, transformed boundary bounds,
+clip-path representation, text escaping and bounded-input refusal cases.
+
 ## Direct-reader admission and migration
 
 The direct `readXmlDocument(xml, options)` API now admits at most 1048576
