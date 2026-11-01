@@ -18,7 +18,8 @@ function expanded(name, scope, attribute) {
 }
 // Admit byte budgets before the full-tree parser allocates. Existing Market
 // conversions have their stricter independent 65536-byte admission.
-const DIRECT_READER_MAX_BYTES = 1048576;
+const DIRECT_READER_DEFAULT_BYTES = 1048576;
+const DIRECT_READER_MAX_BYTES = 2 * DIRECT_READER_DEFAULT_BYTES;
 function admitBudget(value, label, minimum, maximum) {
   if (!Number.isSafeInteger(value) || value < minimum || value > maximum) {
     throw new RangeError(`XML ${label} budget must be a bounded safe integer`);
@@ -87,7 +88,7 @@ function admitLexicalStructure(xml, maximumNodes, maximumDepth, maximumAttribute
 }
 export function readXmlDocument(xml, {
   maximumNodes = 8192, maximumDepth = 64, maximumAttributes = 8192,
-  maximumInputBytes = DIRECT_READER_MAX_BYTES,
+  maximumInputBytes = DIRECT_READER_DEFAULT_BYTES,
 } = {}) {
   if (typeof xml !== "string") {
     throw new TypeError("XML input requires well-formed Unicode text");
@@ -99,7 +100,7 @@ export function readXmlDocument(xml, {
   // UTF-8 byte length is never below UTF-16 code-unit length, even for
   // malformed surrogate pairs. Reject massive input in O(1) before either
   // Unicode inspection or the bounded byte count.
-  if (xml.length > maximumInputBytes || Buffer.byteLength(xml, "utf8") > maximumInputBytes) {
+  if (xml.length > maximumInputBytes || new TextEncoder().encode(xml).byteLength > maximumInputBytes) {
     throw new RangeError("XML input exceeds maximumInputBytes before parsing");
   }
   if (!xml.isWellFormed()) {

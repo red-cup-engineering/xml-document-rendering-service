@@ -63,11 +63,18 @@ test('direct XML reader enforces bounded preparse admission, never fake parser s
  assert.throws(()=>readXmlDocument('<r/>',{maximumInputBytes:3}), /maximumInputBytes before parsing/);
  for(const options of [{maximumNodes:NaN},{maximumNodes:0},{maximumDepth:-1},
    {maximumAttributes:Infinity},{maximumInputBytes:Infinity},
-   {maximumInputBytes:1048577},{maximumNodes:65537}])
+   {maximumInputBytes:2097153},{maximumNodes:65537}])
    assert.throws(()=>readXmlDocument('<r/>',options), RangeError);
  for(const invalid of [42,null,'<r>'+String.fromCharCode(0xD800)+'</r>'])
    assert.throws(()=>readXmlDocument(invalid),TypeError);
  assert.equal(readXmlDocument('<r/>',{maximumInputBytes:4,maximumDepth:1,maximumNodes:2}).children[0].name,'r');
+ assert.equal(readXmlDocument(giant,{maximumInputBytes:2097152}).children[0].children[0].value.length,1048576,
+   'larger direct-reader budget is explicit; the default above remains one MiB');
+ const ceiling='<r>'+'a'.repeat(2097145)+'</r>';
+ assert.equal(readXmlDocument(ceiling,{maximumInputBytes:2097152}).children[0].children[0].value.length,2097145);
+ assert.throws(()=>readXmlDocument(ceiling+' ',{maximumInputBytes:2097152}),/before parsing/);
+ assert.throws(()=>readXmlDocument('<r>é</r>',{maximumInputBytes:8}),/before parsing/,
+   'byte admission counts UTF-8 bytes rather than only UTF-16 code units');
  assert.throws(()=>readXmlDocument('<r/>',{maximumNodes:1}), /exceeds 1 nodes/);
  assert.throws(()=>readXmlDocument('<r a="1"/>',{maximumAttributes:0}), /exceeds 0 attributes/);
 });
