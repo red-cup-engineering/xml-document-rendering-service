@@ -21,6 +21,7 @@ const fixed = (value) => value.toFixed(2);
 const pointX = (cx, r, a) => cx + r * Math.cos(a);
 const pointY = (cy, r, a) => cy + r * Math.sin(a);
 const segmentKey = (segment) => `${segment.e} ${segment.a ?? ""} ${segment.v ?? ""}`;
+const compare = (left, right) => left < right ? -1 : left > right ? 1 : 0;
 
 /** A segment's point: its told evidence, or the name of a reading. */
 export const segmentPoint = (segment) => segment.evidence ?? segment.reading;
@@ -75,7 +76,7 @@ function radialLayout(dataform, geometry) {
   const rings = ordered.map((ring, ringIndex) => {
     const innerRadius = holeRadius + ringIndex * thickness + gap;
     const outerRingRadius = holeRadius + (ringIndex + 1) * thickness - gap;
-    const segments = [...ring.segments].sort((left, right) => segmentKey(left).localeCompare(segmentKey(right)));
+    const segments = [...ring.segments].sort((left, right) => compare(segmentKey(left), segmentKey(right)));
     const totalWeight = segments.reduce((sum, segment) => sum + (segment.weight ?? 1), 0) || 1;
     const full = segments.length === 1;
     let accumulated = 0;

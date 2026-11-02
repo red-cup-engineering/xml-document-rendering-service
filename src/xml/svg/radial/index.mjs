@@ -21,6 +21,7 @@ import { readingColorPalette, readingToColor, readingToSvgPattern, readingToVisu
 export const radialPalette = Object.freeze({ ...readingColorPalette, center: "#1f2937", stroke: "#cbd2da" });
 
 const fixed = (value) => value.toFixed(2);
+const compare = (left, right) => left < right ? -1 : left > right ? 1 : 0;
 
 function describe(dataform, reading) {
   const readings = new Map();
@@ -33,18 +34,18 @@ function describe(dataform, reading) {
       readings.set(name, (readings.get(name) ?? 0) + 1);
     }
   }
-  const byReading = [...readings].sort(([left], [right]) => left.localeCompare(right)).map(([name, count]) => `${name} ${count}`).join(", ");
+  const byReading = [...readings].sort(([left], [right]) => compare(left, right)).map(([name, count]) => `${name} ${count}`).join(", ");
   return `${dataform.rings.length} rings, ${segments} segments (${diagonal} diagonal). By reading${reading === undefined ? "" : ` (${reading})`}: ${byReading}.`;
 }
 
-function renderSegment(placed, palette, reading) {
+function renderSegment(placed, palette, reading, options) {
   const segment = placed.segment;
   const point = segmentPoint(segment);
   const visual = readingToVisual(point, undefined, reading);
   const pattern = readingToSvgPattern(point);
   const attrs = {
     d: placed.shape.path,
-    fill: pattern === undefined ? readingToColor(point, palette) : `url(#${pattern.id})`,
+    fill: pattern === undefined ? readingToColor(point, palette) : `url(#${options.patternId ?? pattern.id})`,
     "fill-opacity": visual.opacity,
     stroke: palette.stroke,
     "stroke-width": 1,
@@ -61,41 +62,56 @@ function renderSegment(placed, palette, reading) {
   if (segment.a !== undefined) attrs["data-a"] = segment.a;
   if (segment.v !== undefined) attrs["data-v"] = segment.v;
   const label = segment.title ?? (segment.label ?? segment.e).replace(/\n/g, " ");
-  return group({}, [element("title", {}, [label]), element("path", attrs)]);
+  const children = [element("title", {}, [label]), element("path", attrs)];
+  if (options.showLabels && segment.label !== undefined) {
+    const radius = (placed.shape.seatedInnerRadius + placed.shape.outerRadius) / 2;
+    const angle = (placed.shape.startAngle + placed.shape.endAngle) / 2;
+    children.push(element("text", {
+      x: fixed(options.cx + radius * Math.cos(angle)),
+      y: fixed(options.cy + radius * Math.sin(angle)),
+      "text-anchor": "middle", "dominant-baseline": "central",
+      "font-size": 14, "font-weight": 700, fill: "#ffffff", "pointer-events": "none",
+    }, [segment.label]));
+  }
+  return group({}, children);
 }
 
-function renderRing(ring, palette, reading) {
+function renderRing(ring, palette, reading, options) {
   return group({ "data-ordinal": ring.ordinal, ...(ring.label === undefined ? {} : { "data-ring": ring.label }) },
-    ring.segments.map((segment) => renderSegment(segment, palette, reading)));
+    ring.segments.map((segment) => renderSegment(segment, palette, reading, options)));
 }
 
 /** The hatch the knowledge top is filled with, over the stable fill. */
-function contradictionPattern(palette) {
+function contradictionPattern(palette, patternId) {
   const pattern = readingToSvgPattern("stable");
   return element("defs", {}, [
-    element("pattern", { id: pattern.id, patternUnits: "userSpaceOnUse", width: pattern.width, height: pattern.height }, [
+    element("pattern", { id: patternId ?? pattern.id, patternUnits: "userSpaceOnUse", width: pattern.width, height: pattern.height }, [
       element("rect", { width: pattern.width, height: pattern.height, fill: readingToColor("stable", palette) }),
       element("path", { d: pattern.path, stroke: pattern.stroke, "stroke-width": pattern.strokeWidth, opacity: pattern.strokeOpacity }),
     ]),
   ]);
 }
 
-/** Project a radial dataform into a deterministic, self-describing SVG. */
-export function projectRadial(dataform, options = {}) {
+/** The original XML node carrier, also used by source-bearing radial documents. */
+export function radialSvgElement(dataform, options = {}) {
   const palette = options.palette ?? radialPalette;
   const reading = options.reading;
   const size = dataform.size ?? 480;
   const radial = layout(dataform, { kind: "radial", center: options.center ?? "apex", margin: options.margin ?? 24, holeRatio: options.holeRatio ?? 0.14 });
   const centerDisc = element("circle", { cx: radial.cx, cy: radial.cy, r: fixed(radial.holeRadius), fill: palette.center, stroke: palette.stroke, "stroke-width": 1 });
-  const root = svgRoot(
+  return svgRoot(
     { width: size, height: size, title: dataform.title ?? "radial diagram", desc: dataform.desc ?? describe(dataform, reading) },
     [
-      contradictionPattern(palette),
+      contradictionPattern(palette, options.patternId),
       background(size, size, dataform.background ?? "#1c1c1e"),
-      group({ "data-codec": "radial", ...(reading === undefined ? {} : { "data-reading": reading }) }, [centerDisc, ...radial.rings.map((ring) => renderRing(ring, palette, reading))]),
+      group({ "data-codec": "radial", ...(reading === undefined ? {} : { "data-reading": reading }) }, [centerDisc, ...radial.rings.map((ring) => renderRing(ring, palette, reading, { ...options, cx: radial.cx, cy: radial.cy }))]),
     ],
   );
-  return document(root, { ...(options.declaration ? { declaration: true } : {}) }).trimEnd();
+}
+
+/** Project a radial dataform into a deterministic, self-describing SVG. */
+export function projectRadial(dataform, options = {}) {
+  return document(radialSvgElement(dataform, options), { ...(options.declaration ? { declaration: true } : {}) }).trimEnd();
 }
 
 export { serialize };
@@ -136,3 +152,5 @@ export const radialProjector = restrict(svgProjector, {
   type: "svg.radial",
   recognize: (resource) => /data-codec="radial"/.test(resource.content),
 });
+
+export { settlementRadialProjection, projectSettlementRadial, readSettlementRadialPayload, readSettlementRadial, verifySettlementRadial } from "./settlement.mjs";
