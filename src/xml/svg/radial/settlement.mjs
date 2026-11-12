@@ -3,9 +3,9 @@
  * remain their original owners. This adapter never runs a step or invents a trace.
  */
 import { readSettling } from "@red-cup-engineering/metrologic/settlement/wire";
-import { isReading, readingAs, readingFamilies } from "@red-cup-engineering/computer-data-engineering-services-section/four";
+import { isReading, readingAs, readingFamilies } from "@red-cup-engineering/metrologic/four";
 import { address, cell, evidenceOf, hasEvidence, hasTriple, presence, valueOf } from "@red-cup-engineering/signcell/cell";
-import { bytesToBase64, canonicalCarrier, coincides, decodeSemantic, semanticBytes, semanticId } from "@red-cup-engineering/computer-content-address-engineering-services-section/semiotic-content-address";
+import { bytesToBase64, canonicalCarrier, coincides, decodeSemantic, semanticBytes, semanticId } from "@red-cup-engineering/signcell/content-address";
 import { imagePayload } from "@red-cup-engineering/computer-serialized-content-engineering-services-section/image-payload";
 import { document, element } from "../../index.mjs";
 import { readingMark, svgRoot } from "../index.mjs";

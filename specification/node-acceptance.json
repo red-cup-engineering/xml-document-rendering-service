@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "basis": "XML 1.0 and Namespaces 1.0 ordered documents carried in UTF-8 with SignCell source evidence.",
+  "cases": [
+    {
+      "id": "XML-NAMESPACE-REFUSAL",
+      "role": "source",
+      "kind": "refusal",
+      "claim": "Malformed markup and namespace failures produce diagnostics and refuse conversions.",
+      "file": "test/xml-transformations.test.mjs",
+      "test": "malformed markup and namespace failures are truthful check results but refused conversions"
+    },
+    {
+      "id": "XML-SOURCE-REPLAY",
+      "role": "consumer",
+      "kind": "example",
+      "claim": "The installed reader identifies exact XML source bytes and the writer validates the emitted document.",
+      "file": "examples/read-document.test.mjs",
+      "test": "the installed XML codec witnesses ordered source and validates its emitted document"
+    }
+  ]
+}

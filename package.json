@@ -1,6 +1,6 @@
 {
   "name": "@red-cup-engineering/xml-document-rendering-service",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/red-cup-engineering/xml-document-rendering-service.git"
@@ -8,6 +8,7 @@
   "files": [
     "src",
     "docs",
+    "examples",
     "test"
   ],
   "private": false,
@@ -51,20 +52,21 @@
     },
     "./svg/data-carrier": {
       "import": "./src/xml/svg/data-carrier.mjs"
-    }
+    },
+    "./source-codec": "./src/xml/source-codec.mjs"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",
+    "test:consumer": "node --test examples/*.test.mjs",
     "test:image-carriers": "node --test test/svg-data-carrier.test.mjs test/xml-transformations.test.mjs"
   },
   "dependencies": {
     "@red-cup-engineering/metrologic": "0.17.0",
     "@rgrove/parse-xml": "5.0.0",
-    "@red-cup-engineering/computer-content-address-engineering-services-section": "0.2.0",
     "@red-cup-engineering/computer-content-engineering-services-section": "0.1.0",
     "@red-cup-engineering/computer-data-engineering-services-section": "0.2.0",
     "@red-cup-engineering/cryptographic-computer-data-engineering-services-section": "0.3.1",
-    "@red-cup-engineering/signcell": "0.1.0",
+    "@red-cup-engineering/signcell": "0.17.5",
     "@red-cup-engineering/uri-services-section": "0.1.1",
     "@red-cup-engineering/computer-serialized-content-engineering-services-section": "0.3.0"
   },

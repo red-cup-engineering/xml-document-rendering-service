@@ -11,7 +11,7 @@
  */
 import { restrict } from "@red-cup-engineering/computer-content-engineering-services-section/typed-resource-classification";
 import { evidenceOf } from "@red-cup-engineering/signcell/cell";
-import { coincides } from "@red-cup-engineering/computer-content-address-engineering-services-section/semiotic-content-address";
+import { coincides } from "@red-cup-engineering/signcell/content-address";
 import { document, element, serialize } from "../../index.mjs";
 import { affirmedEvidence, background, group, readingAttributes, readingOf, svgProjector, svgRoot } from "../index.mjs";
 import { layout, segmentPoint } from "../layout.mjs";
