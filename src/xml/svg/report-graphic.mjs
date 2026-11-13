@@ -6,7 +6,7 @@
  */
 import { deflateSync } from "node:zlib";
 import { semanticBytes, semanticId } from "@red-cup-engineering/signcell/content-address";
-import { makeNiUri as rawNiUri } from "@red-cup-engineering/uri-services-section/ni-uri";
+import { makeNiUri as rawNiUri } from "@red-cup-engineering/uri-engineering-services-section/ni-uri";
 import { four, validateFour } from "@red-cup-engineering/metrologic/four";
 import { sha256Digest, sha256Hex } from "@red-cup-engineering/cryptographic-computer-data-engineering-services-section/integrity";
 
