@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { parseXml } from "@rgrove/parse-xml";
 import { readingSettlement } from "@red-cup-engineering/metrologic/settlement";
 import { cell, address, presence, valueOf } from "@red-cup-engineering/signcell/cell";
-import { coincides, semanticId } from "@red-cup-engineering/computer-content-address-engineering-services-section/semiotic-content-address-system";
+import { coincides, semanticId } from "@red-cup-engineering/signcell/content-address";
 import { settlementRadialProjection, projectSettlementRadial, readSettlementRadialPayload, readSettlementRadial, verifySettlementRadial,
   projectRadial, radialFromValuation, radialFromClosureStages } from "@red-cup-engineering/xml-document-rendering-service/svg/radial";
 import { readSvgDataCarrier } from "@red-cup-engineering/xml-document-rendering-service/svg/data-carrier";

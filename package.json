@@ -1,6 +1,6 @@
 {
   "name": "@red-cup-engineering/xml-document-rendering-service",
-  "version": "0.3.1",
+  "version": "0.3.2-dev.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/red-cup-engineering/xml-document-rendering-service.git"
@@ -61,14 +61,13 @@
     "test:image-carriers": "node --test test/svg-data-carrier.test.mjs test/xml-transformations.test.mjs"
   },
   "dependencies": {
-    "@red-cup-engineering/metrologic": "0.17.0",
+    "@red-cup-engineering/metrologic": "^0.22.2",
     "@rgrove/parse-xml": "5.0.0",
-    "@red-cup-engineering/computer-content-engineering-services-section": "0.1.0",
-    "@red-cup-engineering/computer-data-engineering-services-section": "0.2.0",
-    "@red-cup-engineering/cryptographic-computer-data-engineering-services-section": "0.3.1",
-    "@red-cup-engineering/signcell": "0.17.5",
-    "@red-cup-engineering/uri-engineering-services-section": "0.1.1",
-    "@red-cup-engineering/computer-serialized-content-engineering-services-section": "0.3.0"
+    "@red-cup-engineering/computer-content-engineering-services-section": "^0.2.1-dev.0",
+    "@red-cup-engineering/cryptographic-computer-data-engineering-services-section": "^0.3.4-dev.0",
+    "@red-cup-engineering/signcell": "^0.17.5",
+    "@red-cup-engineering/uri-engineering-services-section": "^0.1.6-dev.0",
+    "@red-cup-engineering/computer-serialized-content-engineering-services-section": "^0.6.1-dev.0"
   },
   "license": "MIT",
   "funding": {
@@ -78,5 +77,19 @@
   "devDependencies": {
     "fast-xml-parser": "5.11.1",
     "xml2js": "0.6.2"
-  }
+  },
+  "receivingTests": [
+    "test/hyperbolic-svg.test.mjs",
+    "test/report-graphic.test.mjs",
+    "test/scxml-atomic-graph.test.mjs",
+    "test/settlement-radial.test.mjs",
+    "test/svg-data-carrier.test.mjs",
+    "test/svg-file-codec.test.mjs",
+    "test/xml-names.test.mjs",
+    "test/xml-transformations.test.mjs",
+    "examples/read-document.test.mjs"
+  ],
+  "receivingFixtures": [
+    "test/fixtures/w3c-xml-and-namespaces.json"
+  ]
 }
