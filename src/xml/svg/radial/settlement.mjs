@@ -2,7 +2,6 @@
  * The solver, FOUR algebra, SignCell evidence, semantic identity and XML writer
  * remain their original owners. This adapter never runs a step or invents a trace.
  */
-import { readSettling } from "@red-cup-engineering/metrologic/settlement/wire";
 import { isReading, readingAs, readingFamilies } from "@red-cup-engineering/metrologic/four";
 import { address, cell, evidenceOf, hasEvidence, hasTriple, presence, valueOf } from "@red-cup-engineering/signcell/cell";
 import { bytesToBase64, canonicalCarrier, coincides, decodeSemantic, semanticBytes, semanticId } from "@red-cup-engineering/signcell/content-address";
@@ -35,7 +34,9 @@ function admitSource(result, cells, view) {
     throw new TypeError("settlement radial: iterations must be a nonnegative safe integer");
   }
   if (!record(result.state)) throw new TypeError("settlement radial: state must be a plain record of readings");
-  const state = readSettling(result.state);
+  // This adapter receives the solver's plain-record result, not a separate wire protocol.
+  // FOUR admission below remains owned by Metrologic; canonicalCarrier retains the source.
+  const state = result.state;
   const ids = Object.keys(state).sort(compare);
   const width = view.size + 472;
   const heightBudget = Math.min(PASSIVE_SVG_LIMITS.maximumDimension, Math.floor(PASSIVE_SVG_LIMITS.maximumPixels / width));
