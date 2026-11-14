@@ -1,6 +1,6 @@
 {
   "name": "@red-cup-engineering/xml-document-rendering-service",
-  "version": "0.3.2-dev.0",
+  "version": "0.3.3-dev.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/red-cup-engineering/xml-document-rendering-service.git"
@@ -63,11 +63,11 @@
   "dependencies": {
     "@red-cup-engineering/metrologic": "^0.22.2",
     "@rgrove/parse-xml": "5.0.0",
-    "@red-cup-engineering/computer-content-engineering-services-section": "^0.2.1-dev.0",
-    "@red-cup-engineering/cryptographic-computer-data-engineering-services-section": "^0.3.4-dev.0",
+    "@red-cup-engineering/computer-content-engineering-services-section": "0.2.2",
+    "@red-cup-engineering/cryptographic-computer-data-engineering-services-section": "0.3.5",
     "@red-cup-engineering/signcell": "^0.17.5",
-    "@red-cup-engineering/uri-engineering-services-section": "^0.1.6-dev.0",
-    "@red-cup-engineering/computer-serialized-content-engineering-services-section": "^0.6.1-dev.0"
+    "@red-cup-engineering/uri-engineering-services-section": "0.1.7",
+    "@red-cup-engineering/computer-serialized-content-engineering-services-section": "0.6.2"
   },
   "license": "MIT",
   "funding": {
