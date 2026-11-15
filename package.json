@@ -76,10 +76,6 @@
     "fast-xml-parser": "5.11.1",
     "xml2js": "0.6.2"
   },
-  "receivingTests": [
-    "test/hyperbolic-svg.test.mjs",
-    "test/settlement-radial.test.mjs"
-  ],
   "receivingFixtures": [
     "test/fixtures/w3c-xml-and-namespaces.json"
   ]
