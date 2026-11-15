@@ -3,7 +3,7 @@ import test from 'node:test';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {xmlToJsonTree,jsonTreeToXml,normalizeXml,checkXmlWellFormedness} from '../src/xml/transformations.mjs';
-import {readXmlDocument, XmlError, UnsupportedXmlFeatureError} from '../src/xml/document-read.mjs';
+import {readXmlDocument, XmlError, UnsupportedXmlFeatureError, XML_DOCUMENT_MAX_NODES, XML_DOCUMENT_MAX_DEPTH, XML_DOCUMENT_MAX_ATTRIBUTES} from '../src/xml/document-read.mjs';
 import xml2js from 'xml2js';
 import {XMLParser, XMLValidator} from 'fast-xml-parser';
 const wrap=(children)=>({kind:'document',children});
@@ -63,8 +63,11 @@ test('direct XML reader enforces bounded preparse admission, never fake parser s
  assert.throws(()=>readXmlDocument('<r/>',{maximumInputBytes:3}), /maximumInputBytes before parsing/);
  for(const options of [{maximumNodes:NaN},{maximumNodes:0},{maximumDepth:-1},
    {maximumAttributes:Infinity},{maximumInputBytes:Infinity},
-   {maximumInputBytes:2097153},{maximumNodes:65537}])
+   {maximumInputBytes:2097153},{maximumNodes:65537},
+   {maximumNodes:XML_DOCUMENT_MAX_NODES+1},{maximumDepth:XML_DOCUMENT_MAX_DEPTH+1},{maximumAttributes:XML_DOCUMENT_MAX_ATTRIBUTES+1}])
    assert.throws(()=>readXmlDocument('<r/>',options), RangeError);
+ assert.equal(readXmlDocument('<r/>',{maximumNodes:XML_DOCUMENT_MAX_NODES,maximumDepth:XML_DOCUMENT_MAX_DEPTH,maximumAttributes:XML_DOCUMENT_MAX_ATTRIBUTES}).children[0].name,'r',
+   'the exported ceilings are the largest structural budgets the reader admits');
  for(const invalid of [42,null,'<r>'+String.fromCharCode(0xD800)+'</r>'])
    assert.throws(()=>readXmlDocument(invalid),TypeError);
  assert.equal(readXmlDocument('<r/>',{maximumInputBytes:4,maximumDepth:1,maximumNodes:2}).children[0].name,'r');

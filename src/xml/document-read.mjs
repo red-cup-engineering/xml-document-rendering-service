@@ -21,6 +21,10 @@ function expanded(name, scope, attribute) {
 // conversions have their stricter independent 65536-byte admission.
 export const XML_DOCUMENT_MAX_BYTES = 1048576;
 const DIRECT_READER_MAX_BYTES = 2 * XML_DOCUMENT_MAX_BYTES;
+// The largest structural budgets a caller may ask the direct reader for.
+export const XML_DOCUMENT_MAX_NODES = 65536;
+export const XML_DOCUMENT_MAX_DEPTH = 1024;
+export const XML_DOCUMENT_MAX_ATTRIBUTES = 65536;
 function admitBudget(value, label, minimum, maximum) {
   if (!Number.isSafeInteger(value) || value < minimum || value > maximum) {
     throw new RangeError(`XML ${label} budget must be a bounded safe integer`);
@@ -94,9 +98,9 @@ export function readXmlDocument(xml, {
   if (typeof xml !== "string") {
     throw new TypeError("XML input requires well-formed Unicode text");
   }
-  admitBudget(maximumNodes, "node", 1, 65536);
-  admitBudget(maximumDepth, "depth", 0, 1024);
-  admitBudget(maximumAttributes, "attribute", 0, 65536);
+  admitBudget(maximumNodes, "node", 1, XML_DOCUMENT_MAX_NODES);
+  admitBudget(maximumDepth, "depth", 0, XML_DOCUMENT_MAX_DEPTH);
+  admitBudget(maximumAttributes, "attribute", 0, XML_DOCUMENT_MAX_ATTRIBUTES);
   admitBudget(maximumInputBytes, "input byte", 1, DIRECT_READER_MAX_BYTES);
   // UTF-8 byte length is never below UTF-16 code-unit length, even for
   // malformed surrogate pairs. Reject massive input in O(1) before either
