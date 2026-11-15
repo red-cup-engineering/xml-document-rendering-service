@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "browser": {
+    "./dist/index.js": "./dist/browser.js"
+  }
+}

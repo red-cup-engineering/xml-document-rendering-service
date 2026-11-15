@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseXml } from '@rgrove/parse-xml';
+import { parseXml } from '../src/upstream/rgrove-parse-xml/dist/index.js';
 import { regularSquareTiling, chartPoint } from '@red-cup-engineering/metrologic/articulation/predicating/geometry/spatial/hyperbolic';
 import { projectHyperbolicScene, renderHyperbolicSvg } from '../src/xml/svg/hyperbolic.mjs';
 

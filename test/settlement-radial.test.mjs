@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseXml } from "@rgrove/parse-xml";
+import { parseXml } from "../src/upstream/rgrove-parse-xml/dist/index.js";
 import { readingSettlement } from "@red-cup-engineering/metrologic/settlement";
 import { cell, address, presence, valueOf } from "@red-cup-engineering/signcell/cell";
 import { coincides, semanticId } from "@red-cup-engineering/signcell/content-address";

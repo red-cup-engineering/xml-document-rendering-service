@@ -1,5 +1,5 @@
 /** Ordered XML 1.0/Namespaces 1.0 nodes; DTD and XML 1.1 are explicit exclusions. */
-import { parseXml, XmlError } from "@rgrove/parse-xml";
+import { parseXml, XmlError } from "../upstream/rgrove-parse-xml/dist/index.js";
 import { encodeUtf8Source } from "@red-cup-engineering/signcell/source-codec";
 import { qname } from "./names.mjs";
 export { XmlError };
