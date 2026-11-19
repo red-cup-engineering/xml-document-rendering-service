@@ -8,7 +8,7 @@ export function xmlDocumentJsonByteLength(value) {
   return bytes;
 }
 
-function admitDocument(value) {
+function validateDocument(value) {
   if (!value || value.kind !== "document") throw new TypeError("document must be a document node");
   let count = 0, queuedNodes = 1, attributes = 0; const stack = [{ node: value, depth: 0 }], ancestors = new Set();
   while (stack.length) {
@@ -43,6 +43,6 @@ function admitDocument(value) {
 }
 /** Admit the ordered XML document carrier before serializing it. */
 export function writeXmlDocument(document) {
-  admitDocument(document);
+  validateDocument(document);
   return serialize(document);
 }
