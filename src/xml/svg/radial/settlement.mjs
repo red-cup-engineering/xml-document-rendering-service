@@ -1,3 +1,4 @@
+import { compareText } from "@red-cup-engineering/semiotic-content-address-system";
 /** A source-bearing view of Metrologic's finite reading-settlement result.
  * The solver, FOUR algebra, SignCell evidence, semantic identity and XML writer
  * remain their original owners. This adapter never runs a step or invents a trace.
@@ -22,7 +23,7 @@ const SOURCE_KIND = "metrologic.reading-settlement";
 const MAX_SOURCE_BYTES = 1024 * 1024;
 const HEADER_AND_FOOTER = 172;
 const ROW_HEIGHT = 58;
-const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+
 const record = (value) => value !== null && typeof value === "object" && !Array.isArray(value) &&
   (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
 const cut = (value, max) => { const chars = [...value]; return chars.length > max ? chars.slice(0, max - 1).join("") + "…" : value; };
@@ -42,7 +43,7 @@ function admitSource(result, cells, view) {
   // This adapter receives the solver's plain-record result, not a separate wire protocol.
   // FOUR admission below remains owned by Metrologic; canonicalCarrier retains the source.
   const state = result.state;
-  const ids = Object.keys(state).sort(compare);
+  const ids = Object.keys(state).sort(compareText);
   const width = view.size + 472;
   const heightBudget = Math.min(PASSIVE_SVG_LIMITS.maximumDimension, Math.floor(PASSIVE_SVG_LIMITS.maximumPixels / width));
   const cellBudget = Math.floor((heightBudget - HEADER_AND_FOOTER) / ROW_HEIGHT);
@@ -55,7 +56,7 @@ function admitSource(result, cells, view) {
   let actualCells;
   if (cells !== undefined) {
     if (!record(cells)) throw new TypeError("settlement radial: cells must map result IDs to actual SignCells");
-    actualCells = Object.fromEntries(Object.keys(cells).sort(compare).map(id => {
+    actualCells = Object.fromEntries(Object.keys(cells).sort(compareText).map(id => {
       if (!Object.hasOwn(state, id)) throw new TypeError(`settlement radial: cell ${id} is outside this result`);
       const at = cells[id];
       if (!hasTriple(at) || !hasEvidence(at)) throw new TypeError("settlement radial: an actual SignCell must carry its triple and both witness lists");
@@ -92,7 +93,7 @@ export function settlementRadialProjection(result, options = {}) {
   const view = admitView(options);
   const source = admitSource(result, options.cells, view);
   const sourceId = semanticId(source);
-  const ids = Object.keys(source.result.state).sort(compare);
+  const ids = Object.keys(source.result.state).sort(compareText);
   const counts = Object.fromEntries(readingFamilies.truth.map(name => [name, 0]));
   const entries = ids.map((id, index) => {
     const reading = source.result.state[id];

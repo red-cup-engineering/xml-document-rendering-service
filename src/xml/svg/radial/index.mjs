@@ -1,3 +1,4 @@
+import { compareText } from "@red-cup-engineering/semiotic-content-address-system";
 /**
  * svg/radial - a settlement's cells as concentric rings.
  *
@@ -21,7 +22,7 @@ import { readingColorPalette, readingToColor, readingToSvgPattern, readingToVisu
 export const radialPalette = Object.freeze({ ...readingColorPalette, center: "#1f2937", stroke: "#cbd2da" });
 
 const fixed = (value) => value.toFixed(2);
-const compare = (left, right) => left < right ? -1 : left > right ? 1 : 0;
+
 
 function describe(dataform, reading) {
   const readings = new Map();
@@ -34,7 +35,7 @@ function describe(dataform, reading) {
       readings.set(name, (readings.get(name) ?? 0) + 1);
     }
   }
-  const byReading = [...readings].sort(([left], [right]) => compare(left, right)).map(([name, count]) => `${name} ${count}`).join(", ");
+  const byReading = [...readings].sort(([left], [right]) => compareText(left, right)).map(([name, count]) => `${name} ${count}`).join(", ");
   return `${dataform.rings.length} rings, ${segments} segments (${diagonal} diagonal). By reading${reading === undefined ? "" : ` (${reading})`}: ${byReading}.`;
 }
 
