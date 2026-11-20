@@ -31,7 +31,7 @@ const nameOf = (term) => typeof term === "string" ? term :
   term === null || typeof term === "boolean" || typeof term === "number" ? String(term) :
     typeof term === "bigint" ? `${term}n` : semanticId(term);
 
-function validateSource(result, cells, view) {
+function admitSource(result, cells, view) {
   if (!record(result) || Object.keys(result).some(key => key !== "state" && key !== "iterations")) {
     throw new TypeError("settlement radial: expected the original {state, iterations} result");
   }
@@ -70,7 +70,7 @@ function validateSource(result, cells, view) {
   return source;
 }
 
-function validateView(options) {
+function admitView(options) {
   if (!record(options)) throw new TypeError("settlement radial: options must be a record");
   if (Object.keys(options).some(key => !["title", "size", "prefix", "cells"].includes(key)))
     throw new TypeError("settlement radial: unknown view option");
@@ -89,8 +89,8 @@ function validateView(options) {
  * the reported settled value; both facts are retained and explicitly distinguished.
  */
 export function settlementRadialProjection(result, options = {}) {
-  const view = validateView(options);
-  const source = validateSource(result, options.cells, view);
+  const view = admitView(options);
+  const source = admitSource(result, options.cells, view);
   const sourceId = semanticId(source);
   const ids = Object.keys(source.result.state).sort(compare);
   const counts = Object.fromEntries(readingFamilies.truth.map(name => [name, 0]));
@@ -181,9 +181,9 @@ export function projectSettlementRadial(result, options = {}) {
  * in SVG, PNG or another exact transport. Geometry is reconstructed separately.
  */
 export function readSettlementRadialPayload({ carrier } = {}) {
-  const validated = imagePayload({ carrier });
-  if (validated.carrier.mediaType !== "application/cbor") throw new TypeError("settlement radial: canonical semantic CBOR required");
-  const payload = decodeSemantic(validated.bytes);
+  const admitted = imagePayload({ carrier });
+  if (admitted.carrier.mediaType !== "application/cbor") throw new TypeError("settlement radial: canonical semantic CBOR required");
+  const payload = decodeSemantic(admitted.bytes);
   if (!record(payload) || payload.kind !== PROFILE || payload.source?.kind !== SOURCE_KIND) throw new TypeError("settlement radial: incompatible source profile");
   const projection = settlementRadialProjection(payload.source.result, { ...payload.view, cells: payload.source.cells });
   const expected = { kind: PROFILE, source: projection.source, view: projection.view };

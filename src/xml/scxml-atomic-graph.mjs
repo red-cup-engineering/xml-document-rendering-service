@@ -41,7 +41,7 @@ function attributes(node, accepted) {
   return node.attributes;
 }
 
-function validateLiteralJson(value) {
+function admitLiteralJson(value) {
   // JSON is data here, never a script or a prototype-setting authority.
   const stack = [value];
   const seen = new Set();
@@ -74,7 +74,7 @@ function inlineJsonData(node) {
   try { value = JSON.parse(text); }
   catch { fail("data " + attr.id + " must contain literal JSON, not a script"); }
   // The caller receives data as observations, not executable SCXML expressions.
-  return Object.freeze({ id: attr.id, value: validateLiteralJson(value) });
+  return Object.freeze({ id: attr.id, value: admitLiteralJson(value) });
 }
 
 function readState(node) {

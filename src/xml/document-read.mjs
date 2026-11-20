@@ -25,7 +25,7 @@ const DIRECT_READER_MAX_BYTES = 2 * XML_DOCUMENT_MAX_BYTES;
 export const XML_DOCUMENT_MAX_NODES = 65536;
 export const XML_DOCUMENT_MAX_DEPTH = 1024;
 export const XML_DOCUMENT_MAX_ATTRIBUTES = 65536;
-function validateBudget(value, label, minimum, maximum) {
+function admitBudget(value, label, minimum, maximum) {
   if (!Number.isSafeInteger(value) || value < minimum || value > maximum) {
     throw new RangeError(`XML ${label} budget must be a bounded safe integer`);
   }
@@ -33,7 +33,7 @@ function validateBudget(value, label, minimum, maximum) {
 // A conservative lexical *lower bound*, not a second XML parser. Refuse
 // definitely excessive structural allocation before the full-tree parser runs.
 // Malformed/unrecognised syntax is left to the native parser for diagnostics.
-function validateLexicalStructure(xml, maximumNodes, maximumDepth, maximumAttributes) {
+function admitLexicalStructure(xml, maximumNodes, maximumDepth, maximumAttributes) {
   let nodes = 1, depth = 0, attributes = 0;
   const node = () => {
     if (++nodes > maximumNodes)
@@ -98,10 +98,10 @@ export function readXmlDocument(xml, {
   if (typeof xml !== "string") {
     throw new TypeError("XML input requires well-formed Unicode text");
   }
-  validateBudget(maximumNodes, "node", 1, XML_DOCUMENT_MAX_NODES);
-  validateBudget(maximumDepth, "depth", 0, XML_DOCUMENT_MAX_DEPTH);
-  validateBudget(maximumAttributes, "attribute", 0, XML_DOCUMENT_MAX_ATTRIBUTES);
-  validateBudget(maximumInputBytes, "input byte", 1, DIRECT_READER_MAX_BYTES);
+  admitBudget(maximumNodes, "node", 1, XML_DOCUMENT_MAX_NODES);
+  admitBudget(maximumDepth, "depth", 0, XML_DOCUMENT_MAX_DEPTH);
+  admitBudget(maximumAttributes, "attribute", 0, XML_DOCUMENT_MAX_ATTRIBUTES);
+  admitBudget(maximumInputBytes, "input byte", 1, DIRECT_READER_MAX_BYTES);
   // UTF-8 byte length is never below UTF-16 code-unit length, even for
   // malformed surrogate pairs. Reject massive input in O(1) before either
   // Unicode inspection or the bounded byte count.
@@ -111,7 +111,7 @@ export function readXmlDocument(xml, {
   }
   if (encodeUtf8Source(xml).byteLength > maximumInputBytes)
     throw new RangeError("XML input exceeds maximumInputBytes before parsing");
-  validateLexicalStructure(xml, maximumNodes, maximumDepth, maximumAttributes);
+  admitLexicalStructure(xml, maximumNodes, maximumDepth, maximumAttributes);
   let unresolved = false;
   // The probe can identify DTD input before an unresolved DTD entity is
   // mislabeled a markup error. No probe with unresolved entities is returned.
