@@ -7,7 +7,8 @@
   },
   "files": [
     "src",
-    "docs"
+    "docs",
+    "test/suppliers.test.mjs"
   ],
   "private": false,
   "type": "module",
@@ -63,11 +64,11 @@
     "@red-cup-engineering/metrologic": "^0.22.2",
     "@red-cup-engineering/computer-content-engineering-services-section": "^0.2.2",
     "@red-cup-engineering/cryptographic-computer-data-engineering-services-section": "^0.3.5",
-    "@red-cup-engineering/signcell": "0.18.0-dev.0",
+    "@red-cup-engineering/signcell": "0.18.0-dev.0 || 0.18.0 || 0.18.1-dev.0",
     "@red-cup-engineering/uri-engineering-services-section": "^0.1.7",
     "@red-cup-engineering/computer-serialized-content-engineering-services-section": "^0.6.4",
-    "@red-cup-engineering/typed-content": "0.1.0-dev.0",
-    "@red-cup-engineering/semiotic-content-address-system": "0.1.7-dev.1"
+    "@red-cup-engineering/typed-content": "0.1.0-dev.0 || 0.1.0 || 0.1.1-dev.0",
+    "@red-cup-engineering/semiotic-content-address-system": "0.1.7-dev.1 || 0.1.7 || 0.1.8-dev.0"
   },
   "license": "MIT",
   "funding": {
@@ -77,5 +78,8 @@
   "devDependencies": {
     "fast-xml-parser": "5.11.1",
     "xml2js": "0.6.2"
+  },
+  "scripts": {
+    "test": "node --test test/suppliers.test.mjs"
   }
 }
