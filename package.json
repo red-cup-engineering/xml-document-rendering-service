@@ -1,0 +1,85 @@
+{
+  "name": "@red-cup-engineering/xml-document-rendering-service",
+  "version": "0.3.10-dev.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/red-cup-engineering/xml-document-rendering-service.git"
+  },
+  "files": [
+    "src",
+    "docs",
+    "test/suppliers.test.mjs"
+  ],
+  "private": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/xml/index.mjs"
+    },
+    "./svg": {
+      "import": "./src/xml/svg/index.mjs"
+    },
+    "./svg/oriented-layout": "./src/xml/svg/oriented-layout.mjs",
+    "./svg/presented-category": "./src/xml/svg/presented-category.mjs",
+    "./xmi": "./src/xml/xmi.mjs",
+    "./svg/radial": {
+      "import": "./src/xml/svg/radial/index.mjs"
+    },
+    "./core": {
+      "import": "./src/xml/core.mjs"
+    },
+    "./svg/layout": {
+      "import": "./src/xml/svg/layout.mjs"
+    },
+    "./svg/visual-valuation": {
+      "import": "./src/xml/svg/visual-valuation.mjs"
+    },
+    "./svg/tile": {
+      "import": "./src/xml/svg/tile.mjs"
+    },
+    "./svg/report-graphic": {
+      "import": "./src/xml/svg/report-graphic.mjs"
+    },
+    "./svg/hyperbolic": {
+      "import": "./src/xml/svg/hyperbolic.mjs"
+    },
+    "./transformations": {
+      "import": "./src/xml/transformations.mjs"
+    },
+    "./document-read": {
+      "import": "./src/xml/document-read.mjs"
+    },
+    "./scxml-atomic-graph": {
+      "import": "./src/xml/scxml-atomic-graph.mjs"
+    },
+    "./svg/data-carrier": {
+      "import": "./src/xml/svg/data-carrier.mjs"
+    },
+    "./source-codec": "./src/xml/source-codec.mjs",
+    "./xml-syntax": "./src/xml/syntax.mjs"
+  },
+  "dependencies": {
+    "@rgrove/parse-xml": "5.0.0",
+    "@red-cup-engineering/computer-graph-serialization-engineering-services-section": "^0.1.2",
+    "@red-cup-engineering/metrologic": "^0.22.2 || 0.22.12-dev.0",
+    "@red-cup-engineering/computer-content-engineering-services-section": "^0.2.2 || 0.3.1-dev.0",
+    "@red-cup-engineering/cryptographic-computer-data-engineering-services-section": "^0.3.5 || 0.3.8-dev.0",
+    "@red-cup-engineering/signcell": "0.18.0-dev.0 || 0.18.0 || 0.18.1-dev.0",
+    "@red-cup-engineering/uri-engineering-services-section": "^0.1.7 || 0.1.10-dev.0",
+    "@red-cup-engineering/computer-serialized-content-engineering-services-section": "^0.6.4 || 0.6.6-dev.0",
+    "@red-cup-engineering/typed-content": "0.1.0-dev.0 || 0.1.0 || 0.1.1-dev.0",
+    "@red-cup-engineering/semiotic-content-address-system": "0.1.7-dev.1 || 0.1.7 || 0.1.8-dev.0"
+  },
+  "license": "MIT",
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/561-group/.github/blob/main/TIPS.md"
+  },
+  "devDependencies": {
+    "fast-xml-parser": "5.11.1",
+    "xml2js": "0.6.2"
+  },
+  "scripts": {
+    "test": "node --test test/suppliers.test.mjs"
+  }
+}
