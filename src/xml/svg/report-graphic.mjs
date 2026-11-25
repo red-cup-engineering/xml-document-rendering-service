@@ -5,10 +5,9 @@
  * profile, and rasterized exactly to PNG.
  */
 import { deflateSync } from "node:zlib";
-import { semanticBytes, semanticId } from "@red-cup-engineering/semiotic-content-address-system";
-import { makeNiUri as rawNiUri } from "@red-cup-engineering/uri-engineering-services-section/ni-uri";
+import { semanticBytes, semanticId, sha256Digest, sha256Hex, makeNiUri } from "@red-cup-engineering/semiotic-content-address-system";
+
 import { four, validateFour } from "@red-cup-engineering/metrologic/four";
-import { sha256Digest, sha256Hex } from "@red-cup-engineering/cryptographic-computer-data-engineering-services-section/integrity";
 
 const CLASSIFICATIONS = Object.freeze([
   "added",
@@ -62,7 +61,6 @@ const GLYPHS = Object.freeze({
   Y:["10001","10001","01010","00100","00100","00100","00100"], Z:["11111","00001","00010","00100","01000","10000","11111"],
 });
 
-export const sha256 = rawNiUri;
 
 // The Discord publication boundary (discord-publication.mjs) verifies attachment
 // bytes against `sha256:<hex>` digests -- the house convention used everywhere
@@ -221,7 +219,7 @@ export function rasterizeExactSvg(svgBytes) {
     }
   }
   const header = Buffer.alloc(13); header.writeUInt32BE(width, 0); header.writeUInt32BE(height, 4); header[8] = 8; header[9] = 6;
-  const svgDigest = sha256(svgBytes);
+  const svgDigest = makeNiUri(svgBytes);
   return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]), pngChunk("IHDR", header),
     pngChunk("tEXt", Buffer.from(`rasterized-from-svg-sha256\0${svgDigest}`, "utf8")),
     pngChunk("IDAT", deflateSync(pixels, { level: 9 })), pngChunk("IEND", Buffer.alloc(0))]);
@@ -230,9 +228,9 @@ export function rasterizeExactSvg(svgBytes) {
 export function renderDeterministicReportGraphic(packet) {
   try {
     const normalized = normalizeDeltaPacket(packet); const svgBytes = renderSvgBytes(normalized); const pngBytes = rasterizeExactSvg(svgBytes);
-    return { type: "DeterministicReportGraphicArtifact", packetDigest: semanticId(normalized), packetBytes: sha256(semanticBytes(normalized)),
-      svgProfile: "RFC7996-safe SVG Tiny 1.2 subset", svgDigest: sha256(svgBytes), svgBase64: svgBytes.toString("base64"),
-      pngDigest: sha256Digest(pngBytes), pngBase64: pngBytes.toString("base64"), rasterizedFromExactSvgDigest: sha256(svgBytes) };
+    return { type: "DeterministicReportGraphicArtifact", packetDigest: semanticId(normalized), packetBytes: makeNiUri(semanticBytes(normalized)),
+      svgProfile: "RFC7996-safe SVG Tiny 1.2 subset", svgDigest: makeNiUri(svgBytes), svgBase64: svgBytes.toString("base64"),
+      pngDigest: sha256Digest(pngBytes), pngBase64: pngBytes.toString("base64"), rasterizedFromExactSvgDigest: makeNiUri(svgBytes) };
   } catch (error) {
     return { type: "DeterministicReportGraphicRefusal", reason: error instanceof Error ? error.message : String(error), effects: [] };
   }
